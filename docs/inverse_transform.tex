@@ -1,17 +1,24 @@
 \documentclass{article}
 
-\usepackage[version=4]{mhchem}
-\usepackage[alsoload=symchem,alsoload=hep]{siunitx}
-\usepackage[unicode,colorlinks=true,allcolors=blue]{hyperref}
-\usepackage{graphicx}
-\usepackage{here}
-\usepackage{amsmath}
+
+% Load Packages
+\usepackage{graphicx}                % drawing
+\usepackage{amsmath}                 % math 
+\usepackage{amssymb}                 % math 
 \usepackage{mathtools}
-\usepackage{amssymb}
-\usepackage{bm}
-\usepackage{url}
-\usepackage{enumitem}
-\usepackage{cleveref}
+\usepackage{here}                    % force figure location with "H"
+\usepackage{fancyhdr}                % fancy header lines
+\usepackage{subcaption}              % \begin{subfigure}[t]{\textwidth}
+\usepackage{url}                     % \url{}
+\usepackage{enumitem}	             % \begin{itemize}[noitemsep]
+\usepackage{pdflscape}	             % rotate page horizontal with \begin{landscape} \hspace{0pt} \vfill
+\usepackage[labelfont=bf]{caption}   % "figure" and "table" bold font
+\usepackage[unicode,colorlinks=true,allcolors=blue]{hyperref} % colored references and citations
+\usepackage{cleveref}                % include reference type with \cref or \Cref
+\usepackage[version=4]{mhchem}       % chemistry notation using \ce
+\usepackage[alsoload=symchem,alsoload=hep]{siunitx}
+\usepackage[nopostdot,nomain,acronym,toc,style=super]{glossaries}
+\usepackage{bm}                      % bold math
 
 % Bibliography
 \usepackage[sorting=none,
@@ -24,6 +31,19 @@
 		    ]{biblatex}
 %\addbibresource{/home/fuji/Documents/Research/Papers/library.bib}
 \addbibresource{/home/fuji/Thesis/library.bib}
+
+% Set Margins
+\oddsidemargin -0.2in		
+\textwidth 6.75in		
+\topmargin -1.5in			
+\textheight 9in			
+\columnsep 0.25in	
+
+% Set Header
+\setlength{\headheight}{80pt}
+\pagestyle{fancy}
+\lhead{Fujimoto, McFadden}
+\rhead{University of British Columbia}
 
 
 \usepackage[final]{showlabels}
@@ -76,10 +96,10 @@ K = \left(
 \right).
 \end{equation}
 %
-Accounting for the errors in \y, the weighted $\chi^2$ is given by 
+The final fit function to the data \y\ is therefore $\sum_i p_i f(\x,z_i)$. Accounting for the errors in \y, the weighted $\chi^2_w$ is given by 
 %
 \begin{equation}
-\min ||\Sigma(\y-K\p)||^2,
+\chi^2_w = ||\Sigma(\y-K\p)||^2,
 \end{equation}
 %
 where
@@ -87,7 +107,7 @@ where
 \begin{equation}
 \Sigma = \left(
 	\begin{array}{cccc}
-	\sigma_1 & & & \\
+	1/\sigma_1 & & & \\
 	& 1/\sigma_2 &&\\
 	&& \ddots &\\
 	&&& 1/\sigma_n
@@ -130,6 +150,7 @@ This is proven by showing that $||\q-L\p||^2 = ||\y-K\p||^2+||\Gamma p||^2$:
 %
 where 
 %
+\begin{subequations}
 \begin{align}
 \q^T\q &= \left(\begin{array}{cc}
 \y^T\Sigma^T & \bm{0}^T
@@ -153,6 +174,7 @@ K^T\Sigma^T & \Gamma^T
 = \p^T(K^T\Sigma^T \Sigma K + \Gamma^T\Gamma)\p.
 \end{align}
 %
+\end{subequations}
 Therefore 
 %
 \begin{align}
@@ -161,7 +183,7 @@ Therefore
 &= ||\Sigma (\y - K\p)||^2 + ||\Gamma\p||^2.
 \end{align}
 %
-Solving $\q = L\p$ using a non-negative least squares algorithm results in the probability distribution weighting the columns of the kernel in the weighted least squares, when \p\ is normalized.
+We then solve $\q = L\p$ using a non-negative least squares algorithm such that \p\ may be identified with the vector of weights corresponding to parameters $z_i$.
 
 %\begin{align}
 %	\q &= L\p\\
