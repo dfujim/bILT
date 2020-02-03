@@ -1,0 +1,192 @@
+\documentclass{article}
+
+\usepackage[version=4]{mhchem}
+\usepackage[alsoload=symchem,alsoload=hep]{siunitx}
+\usepackage[unicode,colorlinks=true,allcolors=blue]{hyperref}
+\usepackage{graphicx}
+\usepackage{here}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{cleveref}
+
+% Bibliography
+\usepackage[sorting=none,
+			autocite=superscript,
+			backend=bibtex,
+			natbib=true,
+			url=false,
+			doi=false,
+		    style=phys
+		    ]{biblatex}
+%\addbibresource{/home/fuji/Documents/Research/Papers/library.bib}
+\addbibresource{/home/fuji/Thesis/library.bib}
+
+
+\usepackage[final]{showlabels}
+
+% Custom commands 
+\newcommand{\red}{\color{red}\bf}
+
+\newcommand{\elip}{\ce{^8Li^+}}
+\newcommand{\eli}{\ce{^8Li}}
+\newcommand{\lip}{\ce{Li^+}}
+
+\newcommand{\sli}{\ce{^7Li}}
+\newcommand{\slip}{\ce{^7Li^+}}
+\newcommand{\bnmr}{$\beta$-NMR}
+
+\newcommand{\y}{\ensuremath{\bm{y}}}
+\newcommand{\p}{\ensuremath{\bm{p}}}
+\newcommand{\x}{\ensuremath{\bm{x}}}
+\newcommand{\z}{\ensuremath{\bm{z}}}
+\newcommand{\q}{\ensuremath{\bm{q}}}
+
+% Customize citation commands
+\newcommand{\authorcite}[1]{\citeauthor{#1}\supercite{#1}}
+\renewcommand{\cite}[1]{\supercite{#1}}
+
+% Title Page stuff
+\title{Inverse Laplace Transforms Applied to \bnmr}
+\author{Derek Fujimoto, Ryan McFadden}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+Let $n$-vector \y\ be be a set of measurements, corresponding to independent variable \x\ of equal length. The goal is to find the vector of weights \p, of length $m$, which satisfies the least squares condition
+%
+\begin{equation}
+\min ||\y-K\p||^2,
+\end{equation}
+%
+where $K$ is a $n\times m$ kernel matrix composed of function $f(x,z)$ in the following way:
+%
+\begin{equation}\label{eq:K}
+K = \left(
+	\begin{array}{cccc}
+	f(x_1,z_1) & f(x_1,z_2) & f(x_1,z_3) & \hdots \\
+	f(x_2,z_1) & \ddots & & \\
+	f(x_3,z_1) & & &  \\
+	\vdots
+	\end{array}
+\right).
+\end{equation}
+%
+Accounting for the errors in \y, the weighted $\chi^2$ is given by 
+%
+\begin{equation}
+\min ||\Sigma(\y-K\p)||^2,
+\end{equation}
+%
+where
+%
+\begin{equation}
+\Sigma = \left(
+	\begin{array}{cccc}
+	\sigma_1 & & & \\
+	& 1/\sigma_2 &&\\
+	&& \ddots &\\
+	&&& 1/\sigma_n
+	\end{array}
+\right)
+\end{equation}
+%
+is the diagonal matrix constructed from the errors in \y. However, due to the noise in \y, the problem is ill-defined: there exist many possible weights \p\ which produce a funtion which falls within the scatter and noise of \y. We introduce regularization $m\times m$ matrix $\Gamma$ in order to minimize 
+%
+\begin{equation}\label{eq:min2}
+\min ||\Sigma(\y-K\p)||^2 + ||\Gamma\p||^2.
+\end{equation}
+%
+This matrix is often chosen to be $\alpha I$, where the parameter $\alpha$ is a constant, and $I$ is the identity matrix. If $\alpha$ is large, this has the effect of smoothing \p. If $\alpha$ is too small, then \p\ will appear to be ``spiky''. For the sake of generality however, we will preserve the notation of $\Gamma$ for the most of the following discussion. The solution to \Cref{eq:min2} also satisfies 
+%
+\begin{equation}
+\q = L\p
+\end{equation}
+%
+where \q\ and $L$ are the block matrices defined by 
+%
+\begin{align}
+\q &= \left(\begin{array}{c}
+\Sigma\y \\ \bm{0}
+\end{array}\right)\\ 
+L &= 
+\left(\begin{array}{c}
+\Sigma K \\ \Gamma
+\end{array}\right).
+\end{align}
+% 
+This is proven by showing that $||\q-L\p||^2 = ||\y-K\p||^2+||\Gamma p||^2$: 
+%
+\begin{align}
+||\q-L\p||^2 &= (\q-L\p)^T(\q-L\p)\\
+&= (\q^T-\p^TL^T)(\q-L\p)\\
+%&= \q^T\q-\q^TL\p-\p^TL^T\q+\p^TL^TL\p\\
+&= \q^T\q-\q^TL\p-(\q^TL\p)^T+\p^TL^TL\p
+\end{align}
+%
+where 
+%
+\begin{align}
+\q^T\q &= \left(\begin{array}{cc}
+\y^T\Sigma^T & \bm{0}^T
+\end{array}\right)\left(\begin{array}{c}
+\Sigma\y \\ \bm{0}
+\end{array}\right)
+= \y^T\Sigma^T\Sigma\y\\
+%
+\q^TL\p &= \left(\begin{array}{cc}
+\y^T\Sigma^T & \bm{0}^T
+\end{array}\right)\left(\begin{array}{c}
+\Sigma K \\ \Gamma
+\end{array}\right)\p
+= \y^T\Sigma^T\Sigma K\p\\
+%
+\p^TL^TL\p &= \p^T\left(\begin{array}{cc}
+K^T\Sigma^T & \Gamma^T
+\end{array}\right)\left(\begin{array}{c}
+\Sigma K \\ \Gamma
+\end{array}\right)\p 
+= \p^T(K^T\Sigma^T \Sigma K + \Gamma^T\Gamma)\p.
+\end{align}
+%
+Therefore 
+%
+\begin{align}
+||\q-L\p||^2 &= \y^T\Sigma^T\Sigma\y + \y^T\Sigma^T\Sigma K\p + \p^TK^T\Sigma^T \Sigma \y + \p^T(K^T\Sigma^T \Sigma K + \Gamma^T\Gamma)\p\\
+&= (\y^T\Sigma^T -\p^TK^T\Sigma^T)(\Sigma \y -\Sigma K\p) + \p^T\Gamma^T\Gamma\p\\
+&= ||\Sigma (\y - K\p)||^2 + ||\Gamma\p||^2.
+\end{align}
+%
+Solving $\q = L\p$ using a non-negative least squares algorithm results in the probability distribution weighting the columns of the kernel in the weighted least squares, when \p\ is normalized.
+
+%\begin{align}
+%	\q &= L\p\\
+%	L^T\q &= L^TL\p\\
+%
+%	\left(\begin{array}{cc}
+%		K^T \Sigma^T & \Gamma^T
+%		\end{array}\right)
+%	\left(\begin{array}{c}
+%		\Sigma\y \\ \bm{0}
+%	\end{array}\right)
+%	&= 
+%	\left(\begin{array}{cc}
+%		K^T \Sigma^T & \Gamma^T
+%	\end{array}\right)
+%	\left(\begin{array}{c}
+%		\Sigma K \\ \Gamma
+%	\end{array}\right)\p\\
+%
+%	K^T\Sigma^T\Sigma\y &= (K^T\Sigma^T\Sigma K + \Gamma^T\Gamma)\p
+%\end{align} 
+
+
+\printbibliography
+\end{document}
+
+
+
