@@ -97,7 +97,12 @@ class bILT(ilt):
             self.__dict__['T1'] = np.array(self.__dict__['T1'])
             self.z = self.T1
         else:
-            self.z = np.logspace(np.log(0.01*1.2096), np.log(100*1.2096), self.n)
+            # determine the upper/lower T1 limits based on the probe lifetime
+            lifetime = bd.life[self.probe]
+            log10_T1_min = np.log10(lifetime * 1e-2)
+            log10_T1_max = np.log10(lifetime * 1e2)
+            # generate the T1 range
+            self.z = np.logspace(log10_T1_min, log10_T1_max, self.n, base=10.0)
             
         if self.isiter:
             for key in ('alpha','chi'):
