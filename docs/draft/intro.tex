@@ -1,0 +1,56 @@
+\section{Introduction \label{sec:introduction}}
+
+In the last few decades, ion-implanted \gls{bnmr} has established itself as unique microscopic probe of condensed matter~\cite{2015-MacFarlane-SSNMR-68-1}.
+In many respects it is quite similar \gls{musr}, with differences in the nuclear properties of the implanted probes making the two techniques complimentary rather than competitors~\cite{2000-Kiefl-PB-289-640}.
+
+The most common \gls{bnmr} probe \ch{^{8}Li} often exhibits multi-exponential relaxation, complicating analysis.
+Its high nuclear spin $I = 2$ is unique among (stable) \gls{nmr} nuclei, yielding fundamentally bi-exponential quadrupole relaxation~\cite{1970-Hubbard-JCP-53-985, 1982-Becker-ZNA-37-697, 1985-Korblein-JPFMP-15-561}.
+In an experiment, especially in complex materials, it is not known beforehand if the multi-exponential polarization transients are due to:
+multiple \ch{^{8}Li} stopping sites with distinct $T_{1}$s;
+quadrupolar relaxation at a single site;
+a distribution of relaxation times;
+or combinations of the above possibilities.
+In such cases, extreme care is required during the analysis when selecting a model to describe the data.
+The same is especially true for the interpretation.
+Both may be tackled through due diligence and exhaustive testing, but the process is hardly expedient.
+It has therefore been desirable to have complementary means of addressing these uncertainties (\latin{e.g.}, what is the \emph{distribution} of $T_{1}$).
+To this end, we explore the use of \glspl{ilt} as an alternative approach to analyzing \ch{^{8}Li} \gls{bnmr} \gls{slr} data.
+
+Recall that \glspl{ilt} are useful when considering an experimental signal that has the form:
+\begin{equation}
+\label{eq:signal-integral}
+   y(t) = \int_{0}^{\infty} p(\lambda) \exp ( - \lambda t) \, \mathrm{d} \lambda,
+\end{equation}
+where $\lambda$ is the relaxation rate and $p ( \lambda )$ is its amplitude or probability density.
+The implicit goal of the analysis is to determine $p ( \lambda )$, which can, in principle, be obtained by taking the \gls{ilt} of the transient $y(t)$:
+\begin{equation}
+\label{eq:ilt}
+   p ( \lambda ) = \frac{1}{2 \pi \imath} \int_{c - \imath \infty}^{c + \imath \infty} y(t) \exp ( \lambda t ) \, \mathrm{d} t ,
+\end{equation}
+where $c$ is a real constant.
+
+Evaluating the integral in \Cref{eq:ilt}, sometimes referred to as the Bromwich integral, is straightforward so long as $y(t)$ is known analytically;
+however, \emph{this is almost never the case in experimental science}!
+\textbf{See review on exponential analysis for more details~\cite{1999-Istratov-RSI-70-1233}.}
+Pragmatically, $p ( \lambda )$ can only be found through solving \Cref{eq:signal-integral}.
+Note that \Cref{eq:signal-integral} is a member of the more general class of Fredholm integral equations of the first kind.
+These integrals are known to be ``ill'', ``incorrectly'', or ``improperly'' posed.
+That is, the solution $p ( \lambda )$ obtained on solving \Cref{eq:signal-integral} may not be unique or even exist!
+
+To deal with this \textbf{\dots more needed here!}
+At this juncture, it is worth mentioning the ``\gls{ilt}'' is somewhat inappropriate language, as discussed in detail elsewhere~\cite{2017-Fordham-DF-29-2}.
+Nevertheless, we preserve the nomenclature for consistency with the \gls{nmr} literature.
+
+
+
+The use of \glspl{ilt} is not uncommon in conventional \gls{nmr}, especially in complex solutions (\latin{e.g.}, in the petroleum industry).
+
+
+% Assuming only that our signal can be written as a sum of exponentially decaying terms, we.
+
+
+The rest of the paper is organized as follows:
+in \Cref{sec:theory} we outline the details of the ``\gls{ilt}'' analysis, including some particulars to \gls{bnmr} \gls{slr} data;
+results from the approach are presented in \Cref{sec:results},
+followed by a discussion in \Cref{sec:discussion}.
+Finally, a concluding summary is given in \Cref{sec:conclusion}.
