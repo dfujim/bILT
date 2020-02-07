@@ -212,7 +212,14 @@ class ilt(object):
             figp, axp = plt.subplots(1,1)
 
             axp.plot(chi, p_norm, "o-", zorder=1)
-            self._annotate(axp,chi,p_norm,['%.3g'%a for a in self.alpha])
+            # annotate the parametric plot at a reduced sampling frequency
+            cutoff = 10
+            if len(self.alpha) > cutoff:
+               # find indices to use with (approximately) even spacings
+               idx = np.round(np.linspace(0, len(self.alpha) - 1, cutoff)).astype(int)
+               self._annotate(axp, chi[idx], p_norm[idx], ['%.3g' % a for a in self.alpha[idx]])
+            else:
+               self._annotate(axp, chi, p_norm, ['%.3g' % a for a in self.alpha])
             
             axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
             axp.set_ylabel("$|| \mathbf{p} ||$")
