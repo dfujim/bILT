@@ -5,7 +5,7 @@
 ### A general ILT
 
 ```python
-from bILT impoort ilt
+from bILT import ilt
 
 # Make some test data
 x = np.linspace(0, 1, 100)
