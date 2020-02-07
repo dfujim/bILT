@@ -216,7 +216,7 @@ class ilt(object):
             axp.set_yscale("log")
             plt.tight_layout()
 
-    def fit(self,w,alpha,maxiter=None):
+    def fit(self,alpha,w,maxiter=None):
         """
             Run the non-negative least squares algorithm for a single value of 
             alpha, the regularization parameter
@@ -299,7 +299,7 @@ class ilt(object):
             del output[key]
             
         # make numpy arrays lists
-        for key in ('x','y','yerr','w','p','fity','K'):
+        for key in ('x','y','yerr','w','p','K'):
             output[key] = output[key].tolist()
         
         if self.isiter:
