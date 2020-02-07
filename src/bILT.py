@@ -66,7 +66,12 @@ class bILT(ilt):
         self.T1 = T1
         
         if T1 is None:    
-            T1 = np.logspace(np.log(0.01 * 1.2096), np.log(100.0 * 1.2096), n)
+            # determine the upper/lower T1 limits based on the probe lifetime
+            lifetime = bd.life[self.probe]
+            log10_T1_min = np.log10(lifetime * 1e-2)
+            log10_T1_max = np.log10(lifetime * 1e2)
+            # generate the T1 range
+            T1 = np.logspace(log10_T1_min, log10_T1_max, n, base=10.0)
         
         # run
         return super().fit(alpha,T1,maxiter)
