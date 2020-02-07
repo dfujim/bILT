@@ -53,31 +53,40 @@ To start, we recast \Cref{eq:slr-integral} in discrete form, yielding
 %\label{eq:signal-discrete}
 %y ( t_{i} ) = \sum_{j} P( \lambda_{j} ) \exp ( - \lambda_{j} t_{i}) ,
 %\end{equation}
+%
 \begin{equation} \label{eq:slr-sum}
    R \left (t_{i}, t^{\prime} \right ) = \sum_{j} p ( \lambda_{j} ) \exp \left [- \lambda_{j} \left ( t_{i} - t^{\prime} \right ) \right ] .
 \end{equation}
+%
 With this transformation, we conveniently write $P(t)$ in matrix form:
+%
 \begin{equation} \label{eq:signal-matrix}
    \mathbf{P} = K \mathbf{p},
 \end{equation}
+%
 where $K$ is the kernel matrix with elements
+%
 \begin{equation}
    \label{eq:kernel}
    [K]_{ij} \propto \exp \left ( - \lambda_{j} t_{i} \right )
 \end{equation}
+%
 and $\mathbf{p}$ is the vector containing the associated amplitudes.
 Of course, this can be easily re-cast as a vector of probability densities:
+%
 \begin{equation}
    \tilde{\mathbf{p}} = \frac{ \mathbf{p} }{ \sum_{i} [p]_{i} } .
 \end{equation}
-
+%
 
 
 To solve the discretized problem, the goal is to
+%
 \begin{equation}
    \label{eq:onnls}
    \arg \min_{\mathbf{P} \geq 0} || \Sigma \left ( K \mathbf{p} - \mathbf{y} \right ) ||^{2} ,
 \end{equation}
+%
 where $\Sigma$ is a diagonal matrix containing the uncertainies
 
 This is a \gls{nnls} problem.
@@ -94,10 +103,12 @@ For \ch{^{8}Li}, a typical minimum bin width is \SI{10}{\milli\second}, which is
 To overcome this potentially show-stopping detail, \emph{regularization} is often introduced to increase the stability of the inversion.
 This is done through the addition of a penalty term with a scale factor $\alpha$.
 With this modification, \Cref{eq:onnls} becomes
+%
 \begin{equation}
 \label{eq:rnnls}
-   \arg \min_{\mathbf{p} \geq 0} || K \mathbf{p} - \mathbf{y} ||^{2} + \alpha || \mathbf{p} ||^{2} .
+   \arg \min_{\mathbf{p} \geq 0} || \Sigma(K \mathbf{p} - \mathbf{y}) ||^{2} + \alpha || \mathbf{p} ||^{2} .
 \end{equation}
+%
 \Cref{eq:rnnls} is commonly known as Tikhonov regularization~\cite{1995-Tikhonov-NMSIPP} or ridge regression.
 Effectively, the added term $\alpha || \mathbf{p} ||^{2}$ seeks to prevent the coefficients in $\mathbf{p}$ from adopting large values without incurring a penalty.
 Pragmatically, this has the effect that, when $\alpha = 0$, $\mathbf{p}$ is most likely to contain elements close to 1 (\latin{i.e.}, giving a ``spiky'' solution).
