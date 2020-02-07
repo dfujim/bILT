@@ -32,12 +32,11 @@ class ilt(object):
             maxiter:    max number of iterations in solver
             p:          array of probabilities corresponding to w, fit results
             S:          diagonal error matrix: diag(1/yerr)
-            w:          array of transformed values corresponding to the 
-                        probabilities in the output (ex: np.logspace(-5,5,500))
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
             yerr:       array of errors
-            
+            z:          array of transformed values corresponding to the 
+                        probabilities in the output (ex: np.logspace(-5,5,500))
     """
     
     def __init__(self,x=None,y=None,yerr=None,fn=None):
@@ -157,9 +156,9 @@ class ilt(object):
             ax1.set_xlabel("$x$")
             
             # draw the probability distribution 
-            ax2.semilogx(self.w,p/np.sum(p))
+            ax2.semilogx(self.z,p/np.sum(p))
             ax2.set_ylabel("Probability Density")
-            ax2.set_xlabel("$w$")
+            ax2.set_xlabel("$z$")
             
             ax1.set_title(r"$\alpha = %g$" % alpha_opt)
             ax2.set_title(r"$\alpha = %g$" % alpha_opt)
@@ -216,24 +215,24 @@ class ilt(object):
             axp.set_yscale("log")
             plt.tight_layout()
 
-    def fit(self,alpha,w,maxiter=None):
+    def fit(self,alpha,z,maxiter=None):
         """
             Run the non-negative least squares algorithm for a single value of 
             alpha, the regularization parameter
         
-            w:          array of transformed values corresponding to the 
+            z:          array of transformed values corresponding to the 
                         probabilities in the output (ex: np.logspace(-5,5,500))
             alpha:      Tikhonov regularization parameter (may be list or number)
             maxiter:    max number of iterations in solver
         """    
         
         # Set inputs
-        self.w = np.asarray(w)
+        self.z = np.asarray(z)
         self.maxiter = maxiter
         x = self.x
         
         # build kernel matrix 
-        self.K = np.array([self.fn(x,i) for i in w]).T
+        self.K = np.array([self.fn(x,i) for i in z]).T
         
         # do list of alphas case
         if isinstance(alpha,Iterable):
@@ -273,7 +272,7 @@ class ilt(object):
             self.__dict__ = yaml.safe_load(fid.read())
             
         # make arrays
-        for key in ('x','y','yerr','w','p','fity','K' ):
+        for key in ('x','y','yerr','z','p','fity','K' ):
             self.__dict__[key] = np.array(self.__dict__[key])
             
         if self.isiter:
@@ -299,7 +298,7 @@ class ilt(object):
             del output[key]
             
         # make numpy arrays lists
-        for key in ('x','y','yerr','w','p','K'):
+        for key in ('x','y','yerr','z','p','K'):
             output[key] = output[key].tolist()
         
         if self.isiter:

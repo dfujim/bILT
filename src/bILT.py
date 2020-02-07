@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from bfit.fitting.functions import pulsed_exp
-from ilt import ilt
+from bILT.src.ilt import ilt
 
 # =========================================================================== #
 class bILT(ilt):
@@ -90,16 +90,16 @@ class bILT(ilt):
             
         if self.T1 is not None:
             self.__dict__['T1'] = np.array(self.__dict__['T1'])
-            self.w = self.T1
+            self.z = self.T1
         else:
-            self.w = np.logspace(np.log(0.01*1.2096), np.log(100*1.2096), self.n)
+            self.z = np.logspace(np.log(0.01*1.2096), np.log(100*1.2096), self.n)
             
         if self.isiter:
             for key in ('alpha','chi'):
                 self.__dict__[key] = np.array(self.__dict__[key])
         
         # assign some of the missing parts
-        self.K = np.array([self.fn(self.x,i) for i in self.w]).T
+        self.K = np.array([self.fn(self.x,i) for i in self.z]).T
     
 
     def write(self,filename,**notes):
