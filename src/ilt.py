@@ -25,7 +25,7 @@ class ilt(object):
         Attributes 
         
             alpha:      Tikhonov regularization parameter       
-            chi:        chisquared value of fit
+            chi2:       chisquared value of fit
             fity:       fit function corresponding to K*p
             fn:         function handle with signature f(x,w)
             isiter:     if True, alpha is a list, not a number
@@ -36,7 +36,7 @@ class ilt(object):
             y:          array of data points f(t) needing to fit
             yerr:       array of errors
             z:          array of transformed values corresponding to the 
-                        probabilities in the output (ex: np.logspace(-5,5,500))
+                        probabilities in the output (e.g., np.logspace(-5, 5, 500))
     """
     
     def __init__(self,x,y=None,yerr=None,fn=None):
@@ -108,13 +108,15 @@ class ilt(object):
         # define functional output
         fity = np.dot(self.K, p)
 
-        # chisquared
-        chi = norm(np.matmul(self.S, (np.matmul(self.K, p)) - self.y))**2/len(self.x)
+        # calculate the fit's chisquared
+        chi2 = norm(np.matmul(self.S, (np.matmul(self.K, p)) - self.y)) ** 2
+        # calculate the fit's reduced chisquared
+        rchi2 = chi2 / len(self.x)
         
         # calculate the generalize cross-validation (GCV) parameter tau
         # tau = np.trace(np.eye(K.shape[1]) - K ( np.matmul(K.T, K) + alpha * alpha * np.matmul(L.T, L) ) K.T )
 
-        return (p, fity, chi)
+        return (p, fity, chi2)
         
     def draw(self,alpha_opt=None,fig=None):
         """
@@ -138,8 +140,10 @@ class ilt(object):
         if alpha_opt is not None:
             
             # get opt data 
-            p, fity, chi = self._fit_single(alpha_opt)
-            print(r"$\chi^2/N = %f$" % chi)
+            p, fity, chi2 = self._fit_single(alpha_opt)
+            print(r"$\chi^{2} = %f$" % chi2)
+            rchi2 = chi2 / len(self.x)
+            print(r"$\tilde{\chi}^{2} = %f$" % rchi2)
             
             # get axes for drawing
             if fig is not None:
@@ -166,12 +170,14 @@ class ilt(object):
             plt.tight_layout()
             
             # return values 
-            return(p,fity,chi)
+            return(p, fity, chi2)
         
         # draw for a range of alphas
         else:     
-            
-            chi = self.chi**0.5  # chi, not chisquared
+            # get chi from the fit chisquared...
+            # (i.e., the Euclidean norm of the (weighted) fit residuals)
+            chi = np.sqrt(self.chi2)
+            # ...and the natural logarithm of alpha and chi
             ln_alpha = np.log(self.alpha)
             ln_chi = np.log(chi)
               
@@ -179,13 +185,13 @@ class ilt(object):
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False,
                                            figsize=(6,7))
             
-            # draw alpha as a function of chisquared ------------------
-            ax1.plot(self.alpha, self.chi, "o", zorder=1)
-            ax1.set_ylabel(r"$\chi^2(\alpha)/N$")
+            # draw chi2 as a function of alpha ------------------
+            ax1.plot(self.alpha, self.chi2, "o", zorder=1)
+            ax1.set_ylabel(r"$\chi^{2}$")
             ax1.set_yscale("log")
             plt.tight_layout()
             
-            # draw dchi/dalpha as a function of chisquared ------------
+            # draw dchi/dalpha as a function of alpha ------------
             
             # derivative of logs
             # https://stackoverflow.com/a/19459160
@@ -194,9 +200,9 @@ class ilt(object):
             
             ax2.plot(self.alpha, dlnchi_dlnalpha, ".-")
             ax2.set_xlabel(r"$\alpha$")
-            ax2.set_ylabel(r"$\mathrm{d}\ln\chi(\alpha) / \mathrm{d}\ln\alpha$")
+            ax2.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
             ax2.axhline(0.1, linestyle="--", color="k", zorder=0,
-                label=r"$\mathrm{d}\ln\chi(\alpha)/\mathrm{d}\ln\alpha = 0.1$")
+                label=r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha = 0.1$")
             
             ax2.legend()
             ax2.set_xscale("log")
@@ -208,8 +214,8 @@ class ilt(object):
             axp.plot(chi, p_norm, "o-", zorder=1)
             self._annotate(axp,chi,p_norm,['%.3g'%a for a in self.alpha])
             
-            axp.set_xlabel("$|| \Sigma ( K \mathbf{P} - \mathbf{y} ) ||$")
-            axp.set_ylabel("$|| \mathbf{P} ||$")
+            axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
+            axp.set_ylabel("$|| \mathbf{p} ||$")
             axp.set_title("L-curve")
 
             axp.set_xscale("log")
@@ -241,25 +247,25 @@ class ilt(object):
             self.alpha = np.asarray(alpha)
             p = []
             fity = []
-            chi = []
+            chi2 = []
             
-            for a in tqdm(alpha,desc="calculating alphas:"):
+            for a in tqdm(alpha,desc="NNLS optimization @ each alpha"):
                 out = self._fit_single(a)
                 p.append(out[0])
                 fity.append(out[1])
-                chi.append(out[2])
+                chi2.append(out[2])
             
             self.p = np.array(p)
             self.fity = np.array(fity)
-            self.chi = np.array(chi)
+            self.chi2 = np.array(chi2)
             
         # do a single alpha case
         else:
             self.isiter = False
             self.alpha = alpha
-            self.p, self.fity, self.chi = self._fit_single(alpha)
+            self.p, self.fity, self.chi2 = self._fit_single(alpha)
         
-        return (self.p,self.fity,self.chi)
+        return (self.p,self.fity,self.chi2)
         
     def read(self,filename):
         """
@@ -277,7 +283,7 @@ class ilt(object):
             self.__dict__[key] = np.array(self.__dict__[key])
             
         if self.isiter:
-            for key in ('alpha','chi'):
+            for key in ('alpha','chi2'):
                 self.__dict__[key] = np.array(self.__dict__[key])
         
         # assign some of the missing parts
@@ -303,7 +309,7 @@ class ilt(object):
             output[key] = output[key].tolist()
         
         if self.isiter:
-            for key in ('alpha','chi'):
+            for key in ('alpha','chi2'):
                 output[key] = output[key].tolist()
         
         # write to file 
