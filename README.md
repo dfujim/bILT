@@ -35,7 +35,7 @@ trans.draw(1)
 # Example of usage: BNMR ILT
 
 ```python
-from bILT impoort bILT
+from bILT import bILT
 
 # setup
 trans = bILT(40214,2009)
