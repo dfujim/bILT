@@ -39,20 +39,19 @@ class ilt(object):
                         probabilities in the output (ex: np.logspace(-5,5,500))
     """
     
-    def __init__(self,x=None,y=None,yerr=None,fn=None):
+    def __init__(self,x,y=None,yerr=None,fn=None):
         """
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
             yerr:       array of errors
             fn:         function handle with signature f(x,w)
             
-            If any inputs are none, make empty object. 
-            Should then read from file.
+            If x is a string, read input from filename
         """    
         
-        if not any([i is None for i in (x,y,yerr,fn)]):
-            
-            # Set inputs
+        if type(x) is str:
+            self.read(x)
+        else:
             self.x = np.asarray(x)
             self.y = np.asarray(y)
             self.yerr = np.asarray(yerr)
@@ -92,6 +91,8 @@ class ilt(object):
         # weighted variables for solving q = Lp
         L = np.matmul(self.K.T, np.matmul(self.S, self.K))
         q = np.matmul(self.K.T, np.matmul(self.S, self.y))
+        # ~ L = np.matmul(self.S, self.K)
+        # ~ q = np.matmul(self.S, self.y)
         
         # concatenate regularization
         # https://stackoverflow.com/a/35423745
@@ -108,7 +109,7 @@ class ilt(object):
         fity = np.dot(self.K, p)
 
         # chisquared
-        chi = norm(np.matmul(self.S, (np.matmul(self.K, p) - self.y)))**2
+        chi = norm(np.matmul(self.S, (np.matmul(self.K, p)) - self.y))**2/len(self.x)
         
         # calculate the generalize cross-validation (GCV) parameter tau
         # tau = np.trace(np.eye(K.shape[1]) - K ( np.matmul(K.T, K) + alpha * alpha * np.matmul(L.T, L) ) K.T )
@@ -138,7 +139,7 @@ class ilt(object):
             
             # get opt data 
             p, fity, chi = self._fit_single(alpha_opt)
-            print(r"$\chi^2 = %f$" % chi)
+            print(r"$\chi^2/N = %f$" % chi)
             
             # get axes for drawing
             if fig is not None:
@@ -180,7 +181,7 @@ class ilt(object):
             
             # draw alpha as a function of chisquared ------------------
             ax1.plot(self.alpha, self.chi, "o", zorder=1)
-            ax1.set_ylabel(r"$\chi^2(\alpha)$")
+            ax1.set_ylabel(r"$\chi^2(\alpha)/N$")
             ax1.set_yscale("log")
             plt.tight_layout()
             
@@ -272,7 +273,7 @@ class ilt(object):
             self.__dict__ = yaml.safe_load(fid.read())
             
         # make arrays
-        for key in ('x','y','yerr','z','p','fity','K' ):
+        for key in ('x','y','yerr','z','p','K' ):
             self.__dict__[key] = np.array(self.__dict__[key])
             
         if self.isiter:
@@ -294,7 +295,7 @@ class ilt(object):
         output = {**self.__dict__,**notes}
         
         # remove the useless attributes, or those too large to be useful
-        for key in ('fn','S'):
+        for key in ('fn','S','fity'):
             del output[key]
             
         # make numpy arrays lists
