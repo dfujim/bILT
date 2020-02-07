@@ -12,67 +12,72 @@ The quantity of real interest is $P(t)$, whose temporal behaviour is connected w
 In order to introduce the \gls{bnmr} probes in a host material of interest, they are ion-implanted using a \gls{dc} beam for a finite period of time $\Delta$, typically on the order of few seconds.
 On arrival, each \gls{bnmr} probe interacts with electromagnetic fields inside the host and relaxes (\latin{i.e.}, re-orients);
 however, not all probes arrive at the same time, which must be accounted for.
-Fortunately, this convolution with the beam can be solved analytically with the time dependence of $P(t)$ written as~\cite{2006-Salman-PRL-96-147601, 2015-MacFarlane-PRB-92-064409}:
+Fortunately, this convolution with the beam can be solved analytically. For probes arriving at time $t'$ during a beam pulse of duration $\Delta$ and decaying at later time $t$, the time dependence of $P(t)$ written as~\cite{2006-Salman-PRL-96-147601, 2015-MacFarlane-PRB-92-064409}
+%
 \begin{equation} \label{eq:polarization}
-   P(t) = P_{0} \times
-   \begin{cases}
-      \frac{ \displaystyle \int_{0}^{t} \exp \left [ -\left ( t - t^{\prime} \right ) / \tau_{\beta} \right ] \, R \left (t,t^{\prime} \right ) \, \mathrm{d}t^{\prime} }{ \displaystyle \int_{0}^{t} \exp \left [ -t^{\prime} / \tau_{\beta} \right ] \, \mathrm{d}t^{\prime} }, & t \leq \Delta \\
-      \frac{ \displaystyle \int_{0}^{\Delta} \exp \left [ - \left ( \Delta - t^{\prime} \right ) / \tau_{\beta} \right ] \,  R \left (t, t^{\prime} \right ) \, \mathrm{d}t^{\prime} }{ \displaystyle \int_{0}^{\Delta} \exp \left [ -t^{\prime} / \tau_{\beta} \right ] \, \mathrm{d} t^{\prime} }, & t > \Delta
-   \end{cases}
+P(t) = P_0 \frac{ \displaystyle \int_{0}^{\eta} \exp \left [ -\left (\eta - t^{\prime} \right ) / \tau_{\beta} \right ] \, R \left (t,t^{\prime} \right ) \, \mathrm{d}t^{\prime} }{ \displaystyle \int_{0}^{\eta} \exp \left [ -t^{\prime} / \tau_{\beta} \right ] \, \mathrm{d}t^{\prime} },
+%   P(t) = P_{0} \times
+%   \begin{cases}
+%      \frac{ \displaystyle \int_{0}^{t} \exp \left [ -\left (t - t^{\prime} \right ) / \tau_{\beta} \right ] \, R \left (t,t^{\prime} \right ) \, \mathrm{d}t^{\prime} }{ \displaystyle \int_{0}^{t} \exp \left [ -t^{\prime} / \tau_{\beta} \right ] \, \mathrm{d}t^{\prime} }, & t \leq \Delta \\
+%      \frac{ \displaystyle \int_{0}^{\Delta} \exp \left [ - \left ( \Delta - t^{\prime} \right ) / \tau_{\beta} \right ] \,  R \left (t, t^{\prime} \right ) \, \mathrm{d}t^{\prime} }{ \displaystyle \int_{0}^{\Delta} \exp \left [ -t^{\prime} / \tau_{\beta} \right ] \, \mathrm{d} t^{\prime} }, & t > \Delta
+%   \end{cases}
 \end{equation}
-where $t^{\prime} < t$ is the arrival time of the probe, $P_{0}$ is the degree of polarization at $t = 0$ (determined by the optical pumping of \ch{^{8}Li} prior to implantation), $\Delta$ is the duration of the beam pulse, and $R \left (t, t^{\prime} \right )$ is the relaxation function.
+%
+where $\eta = t$ if $t\leq \Delta$, and $\eta = \Delta$ otherwise. $P_{0}$ is the degree of polarization at $t = 0$ (determined by the optical pumping of \ch{^{8}Li} prior to implantation), and $R \left (t, t^{\prime} \right )$ is the relaxation function.
 
-
-Quite generally, $R \left (t, t^{\prime} \right )$ can be written as a distribution of decaying exponentials
+% I think this way of presenting it makes more sense with regards to describing the kernel matrix
+The simplest form for $R \left (t, t^{\prime} \right )$ is a single decaying exponential: 
+%
 \begin{equation} \label{eq:slr-integral}
-   R \left (t, t^{\prime} \right ) = \int_{0}^{\infty} p ( \lambda ) \exp \left [-  \lambda \left ( t - t^{\prime} \right ) \right ] \, \mathrm{d} \lambda ,
+   R \left (t, t^{\prime} \right ) = \exp \left [-  \lambda \left ( t - t^{\prime} \right ) \right ],
 \end{equation}
-where $\lambda \equiv 1 / T_{1}$ is the \gls{slr} rate and $p ( \lambda )$ is the probability density.
+%
+where $\lambda \equiv 1 / T_{1}$ is the \gls{slr} rate. Quite generally, however, $R \left (t, t^{\prime} \right )$ can be written as a distribution of decaying exponentials, with the distribution of the \gls{slr} rates described by some $p(\lambda)$.
 This is quite analogous to \Cref{eq:signal-integral}.
 In practice, spectra are often well-described (at the level of phenomenology) by a stretched exponential or \gls{kww} function~\cite{1854-Kohlrausch-AP-167-179, 1970-Williams-TFS-66-80, 1980-Lindsay-JCP-73-3348, 2006-Johnston-PRB-74-184430, 2016-Wu-SR-6-20506}.
 In this case \Cref{eq:slr-integral} becomes:
+%
 \begin{equation} \label{eq:slr-stretched}
-   R \left ( t, t^{\prime} \right ) \approx \exp \left \{ - \left  [ \lambda \left ( t-t^{\prime} \right ) \right ]^{\beta} \right \},
+   R_\mathrm{KWW} \left ( t, t^{\prime} \right ) = \exp \left \{ - \left  [ \lambda \left ( t-t^{\prime} \right ) \right ]^{\beta} \right \},
 \end{equation}
-where $\lambda \equiv 1/T_{1}$ is the relaxation rate and $0 < \beta \leq 1$ is the stretching exponent.
-This form of $R \left ( t, t^{\prime} \right )$ is quite general and can arise from a continuous distribution of exponential relaxation times~\cite{2006-Johnston-PRB-74-184430}, with special cases of $\beta = 1/2$~\cite{1968-Tse-PRL-21-511, 1984-Stockmann-JNCS-66-501} or $\beta = 1/3$~\cite{1992-Bader-JPCM-4-4779} coming from \gls{slr} that is inhomogenously averaged in \gls{3d} or \gls{2d} limits.
+%
+where $0 < \beta \leq 1$ is the stretching exponent.
+This form of $R \left ( t, t^{\prime} \right )$ can arise when the \gls{kww} distribution is chosen for $p(\lambda)$~\cite{2006-Johnston-PRB-74-184430}. The special cases of $\beta = 1/2$~\cite{1968-Tse-PRL-21-511, 1984-Stockmann-JNCS-66-501} or $\beta = 1/3$~\cite{1992-Bader-JPCM-4-4779} originate from \gls{slr} that is inhomogenously averaged in \gls{3d} or \gls{2d} limits.
 The approach is often used in conventional solid-state \gls{nmr}~\cite{1995-Narayanan-JMRSA-112-58}, though chiefly as an expedient simplification of the multi-exponential magnetization transients, particularly when quadrupolar interactions are present~\cite{1995-McDowell-JMRSA-113-242}.
 %In disordered or glassy materials like polymers a distribution of relaxation times is expected and a stretched exponential works works well~\cite{2014-McKenzie-JACS-136-7833, 2014-McGee-JPCS-551-012039, 2015-McKenzie-SM-11-1755, 2017-McKenzie-JCP-146-244903, 2018-McKenzie-SM-14-7324, 2019-Fujimoto-CM-31-9346}.
 %While it may not be \latin{a priori} obvious why a relaxation transient appears stretched, the function has the following advantages as a phenomenological model:
 %1) it accurately captures the characteristic $1/e$ relaxation time;
 %and 2) it contains relatively few degrees of freedom (\latin{i.e.}, less than a biexponential model).
 
+While the \gls{kww} distribution is successful in describing a great deal of relaxation phenomena, it is hardly the simplest distribution to work with, and may in fact be too successful. The high degree of correlation between $\lambda$ and $\beta$, allows stretched exponential to do a good job in fitting relaxation spectra whose underlying may be much simpler (e.g. a biexponential). This ease of use of the stretched exponential may disguise the proper relaxation function and lead to an incorrect interpretation of the relaxation mechanism. We now describe how the \gls{ilt} may be used to determine $p ( \lambda )$, and reveal the underlying distribution of exponentials. 
 
-\textbf{A better transition needed here?}
-
-
-We now begin the process of determining $p ( \lambda )$.
-To start, we recast \Cref{eq:slr-integral} in discrete form, yielding
-\textbf{(the notation should probably be improved\dots)}
+To start, we discretize $t$ and $\lambda$, such that \Cref{eq:slr-integral} may instead be written as
 %\begin{equation}
 %\label{eq:signal-discrete}
 %y ( t_{i} ) = \sum_{j} P( \lambda_{j} ) \exp ( - \lambda_{j} t_{i}) ,
 %\end{equation}
 %
-\begin{equation} \label{eq:slr-sum}
-   R \left (t_{i}, t^{\prime} \right ) = \sum_{j} p ( \lambda_{j} ) \exp \left [- \lambda_{j} \left ( t_{i} - t^{\prime} \right ) \right ] .
+\begin{equation} \label{eq:slr-discrete}
+   R \left (t_{i}, t^{\prime};\lambda_j \right ) = \exp \left [- \lambda_{j} \left ( t_{i} - t^{\prime} \right ) \right ] .
 \end{equation}
 %
-With this transformation, we conveniently write $P(t)$ in matrix form:
+With this transformation, we conveniently write $A(t)$ in matrix form:
 %
 \begin{equation} \label{eq:signal-matrix}
-   \mathbf{P} = K \mathbf{p},
+   \mathbf{A} = K \mathbf{p},
 \end{equation}
 %
-where $K$ is the kernel matrix with elements
+where $\mathbf{p}$ is the vector containing the associated amplitudes, and $K$ is the kernel matrix:
 %
 \begin{equation}
    \label{eq:kernel}
-   [K]_{ij} \propto \exp \left ( - \lambda_{j} t_{i} \right )
+   [K]_{ij} = P(t_i;\lambda_j),
+   %\exp \left ( - \lambda_{j} t_{i} \right )
 \end{equation}
 %
-and $\mathbf{p}$ is the vector containing the associated amplitudes.
-Of course, this can be easily re-cast as a vector of probability densities:
+where $P(t_i;\lambda_j)$ is found by plugging \Cref{eq:slr-discrete} into \Cref{eq:polarization}.
+Of course, this can be easily re-cast as a vector of probability densities: 
+\textbf{if the $\lambda_j$ are not evenly spaced, then this is not necessarily true. It may be better to instead leave this more vague and say it is easily cast to a normalized vector, without saying how.}
 %
 \begin{equation}
    \tilde{\mathbf{p}} = \frac{ \mathbf{p} }{ \sum_{i} [p]_{i} } .
@@ -87,7 +92,7 @@ To solve the discretized problem, the goal is to
    \arg \min_{\mathbf{P} \geq 0} || \Sigma \left ( K \mathbf{p} - \mathbf{y} \right ) ||^{2} ,
 \end{equation}
 %
-where $\Sigma$ is a diagonal matrix containing the uncertainies
+where $\Sigma$ is a diagonal matrix of the reciprocal uncertainties, and $\mathbf{y}$ is the measured asymmetry. 
 
 This is a \gls{nnls} problem.
 While straightforward, success is not guaranteed.
