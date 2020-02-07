@@ -3,6 +3,8 @@ Inverse Laplace Transform objects, optimized for BNMR data
 
 # Examples of usage: general ILT
 ```python
+from bILT impoort ilt
+
 # Make some test data
 x = np.linspace(0,1,100)
 y = x**2
@@ -33,6 +35,8 @@ trans.draw(1)
 # Example of usage: BNMR ILT
 
 ```python
+from bILT impoort bILT
+
 # setup
 trans = bILT(40214,2009)
 
