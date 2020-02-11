@@ -5,6 +5,10 @@
 # https://stackoverflow.com/a/36112536
 # https://stackoverflow.com/a/35423745
 # https://gist.github.com/diogojc/1519756
+
+# annotate on hover
+# https://stackoverflow.com/a/47166787
+
 import yaml
 
 import numpy as np
@@ -24,8 +28,12 @@ class ilt(object):
         
         Attributes 
         
-            alpha:      Tikhonov regularization parameter       
+            alpha:      Tikhonov regularization parameter      
+            annot:      annotation object (blank, but shown on hover)
+            axp:        L curve matplotlib axis
+            line:       L curve line drawn, used for annotation shown on hover 
             chi2:       chisquared value of fit
+            figp:       L curve matplotlib figure
             fity:       fit function corresponding to K*p
             fn:         function handle with signature f(x,w)
             isiter:     if True, alpha is a list, not a number
@@ -60,28 +68,29 @@ class ilt(object):
             # build error matrix
             self.S = np.diag(1/yerr)
 
-    def _annotate(self,ax,x,y,ptlabels):
+    def _annotate(self,ind):
         """
-            Add annotation to figure
-            
-            x,y: coordinates of where to place the annotation
-            ptlabels: labels for annotation
+            Show annotation 
         """
-        for label,xcoord,ycoord in zip(ptlabels,x,y):        
-            if type(label) != type(None):
-                ax.annotate(label,
-                             xy=(xcoord,ycoord),
-                             xytext=(-3, 20),
-                             textcoords='offset points', 
-                             ha='right', 
-                             va='bottom',
-                             bbox=dict(boxstyle='round,pad=0.1',
-                                       fc='grey', 
-                                       alpha=0.1),
-                             arrowprops=dict(arrowstyle = '->', 
-                                             connectionstyle='arc3,rad=0'),
-                             fontsize='xx-small')    
+        x,y = self.line.get_data()
+        idx = ind["ind"][0]
+        self.annot.xy = (x[idx], y[idx])
+        self.annot.set_text(r'$\alpha = $%.3g' % self.alpha[idx])
+        self.annot.get_bbox_patch().set_alpha(0.1)            
     
+    def _hover(self,event):
+        vis = self.annot.get_visible()
+        if event.inaxes == self.axp:
+            cont, ind = self.line.contains(event)
+            if cont:
+                self._annotate(ind)
+                self.annot.set_visible(True)
+                self.figp.canvas.draw_idle()
+            else:
+                if vis:
+                    self.annot.set_visible(False)
+                    self.figp.canvas.draw_idle()
+        
     def _fit_single(self,alpha):
         """
             Run the non-negative least squares algorithm for a single value of 
@@ -197,7 +206,6 @@ class ilt(object):
             # https://stackoverflow.com/a/19459160
             dlnchi_dlnalpha = np.gradient(ln_alpha) / np.gradient(ln_chi)
             
-            
             ax2.plot(self.alpha, dlnchi_dlnalpha, ".-")
             ax2.set_xlabel(r"$\alpha$")
             ax2.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
@@ -209,18 +217,30 @@ class ilt(object):
         
             # plot the L-curve ----------------------------------------
             p_norm = np.array([norm(i) for i in self.p])
-            figp, axp = plt.subplots(1,1)
-
-            axp.plot(chi, p_norm, "o-", zorder=1)
-            # annotate the parametric plot at a reduced sampling frequency
-            cutoff = 10
-            if len(self.alpha) > cutoff:
-               # find indices to use with (approximately) even spacings
-               idx = np.round(np.linspace(0, len(self.alpha) - 1, cutoff)).astype(int)
-               self._annotate(axp, chi[idx], p_norm[idx], ['%.3g' % a for a in self.alpha[idx]])
-            else:
-               self._annotate(axp, chi, p_norm, ['%.3g' % a for a in self.alpha])
+            self.figp, axp = plt.subplots(1,1)
+            self.axp = axp
             
+            self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
+            
+            # annotate the parametric plot on mouse hover
+            self.annot = axp.annotate("",
+                                 xy=(0,0),
+                                 xytext=(50, 20),
+                                 textcoords='offset points', 
+                                 ha='right', 
+                                 va='bottom',
+                                 bbox=dict(boxstyle='round,pad=0.1',
+                                           fc='grey', 
+                                           alpha=0.1),
+                                 arrowprops=dict(arrowstyle = '->', 
+                                                 connectionstyle='arc3,rad=0'),
+                                 fontsize='xx-small')
+            self.annot.set_visible(False)
+            
+            # connect the hovering mechanism
+            self.figp.canvas.mpl_connect("motion_notify_event", self._hover)
+            
+            # axis labels
             axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
             axp.set_ylabel("$|| \mathbf{p} ||$")
             axp.set_title("L-curve")
