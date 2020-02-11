@@ -98,10 +98,8 @@ class ilt(object):
         """    
         
         # weighted variables for solving q = Lp
-        L = np.matmul(self.K.T, np.matmul(self.S, self.K))
-        q = np.matmul(self.K.T, np.matmul(self.S, self.y))
-        # ~ L = np.matmul(self.S, self.K)
-        # ~ q = np.matmul(self.S, self.y)
+        L = np.matmul(self.S, self.K)
+        q = np.matmul(self.S, self.y)
         
         # concatenate regularization
         # https://stackoverflow.com/a/35423745
