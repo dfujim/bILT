@@ -187,6 +187,17 @@ class ilt(object):
             # ...and the natural logarithm of alpha and chi
             ln_alpha = np.log(self.alpha)
             ln_chi = np.log(chi)
+            
+            # calculate the norm of all the p-vectors
+            p_norm = np.array([norm(i) for i in self.p])
+            
+            # indentify the alpha that gives the minium in chi2
+            idx_min = np.argmin(self.chi2)
+            # highlight this point on the generated plots
+            chi2_min = self.chi2[idx_min]
+            chi_min = chi[idx_min]
+            alpha_min = self.alpha[idx_min]
+            p_norm_min = p_norm[idx_min]
               
             # make canvas
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False,
@@ -194,6 +205,7 @@ class ilt(object):
             
             # draw chi2 as a function of alpha ------------------
             ax1.plot(self.alpha, self.chi2, "o", zorder=1)
+            ax1.plot(alpha_min, chi2_min, "s", zorder=2)
             ax1.set_ylabel(r"$\chi^{2}$")
             ax1.set_yscale("log")
             plt.tight_layout()
@@ -214,12 +226,11 @@ class ilt(object):
             ax2.set_xscale("log")
         
             # plot the L-curve ----------------------------------------
-            p_norm = np.array([norm(i) for i in self.p])
             self.figp, axp = plt.subplots(1,1)
             self.axp = axp
             
             self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
-            
+            axp.plot(chi_min, p_norm_min, "s", zorder=2)
             # annotate the parametric plot on mouse hover
             self.annot = axp.annotate("",
                                  xy=(0,0),
