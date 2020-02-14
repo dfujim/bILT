@@ -50,6 +50,9 @@ The use of \glspl{ilt} is not uncommon in conventional \gls{nmr}, particularly w
 % Assuming only that our signal can be written as a sum of exponentially decaying terms, we.
 
 
+
+The goal of this paper is to describe how to perform the \gls{ilt} on discretized and reasonably noisy data. The \gls{slr} measurements produced by implanted-ion \gls{bnmr} serve as a good candidate for demonstrating the functionality of the method described here. The scatter in the data are largely statistical, and are typically well-described via Poisson statistics. That said, they are inhomogeneous in time, resulting from a necessary pulsing of the ion beam. The \gls{slr} is observed in the histogrammed arrival times of the betas emitted from the implanted \ch{^8Li^+}. The nuclear lifetime of the \ch{^8Li} determines how the signal statistics vary with time, which in turn fixes the observable window of the \gls{slr} to about \SI{15}{\s}. While this restricts the upper bound of the observable $\lambda$, the lower bound is set by the size of the histogram bins, typically chosen to be \SI{10}{\milli\second} (a factor of \num{\sim 120} smaller than the nuclear lifetime). In summary, the range of accessible $\lambda$ is known; the errors represent a well-defined, but rather general case; and there are many \gls{bnmr} measurements in extremely well-studied classes of materials, for which the relaxation function is known. 
+
 The rest of the paper is organized as follows:
 in \Cref{sec:theory} we outline the details of the ``\gls{ilt}'' analysis, including some particulars to \gls{bnmr} \gls{slr} data;
 results from the approach are presented in \Cref{sec:results},
