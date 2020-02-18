@@ -15,10 +15,22 @@ class bILT(ilt):
     """
         Inverse Laplace Transform for bNMR SLR data using pulsed exponentials
         as the Kernel matrix
+        
+        Attributues
+        
+        p_lognorm:  normalized p, accounting for logarithmic bin spacing of T1
+        n:          number of T1 values in array within 0.01*tau and 100*tau
+        T1:         user-specified T1 array
+        
     """
     
     def __init__(self,run,year=-1,rebin=1,probe='Li8'):
         """
+            run:        run number
+            year:       year 
+            rebin:      rebinning in asymmetry calculation
+            probe:      probe lifetime to use in exp calculation
+            
             if run is a filename, read from that file
         """
         
@@ -46,6 +58,23 @@ class bILT(ilt):
                 
         # build error matrix
         self.S = np.diag(1/self.yerr) 
+        
+    def draw_pnorm(self,alpha_opt):
+        """
+            Draw the normalized probabilty distribution, assyming a logarithmic
+            distribution of T1. 
+            
+            alpha_opt:  optimal alpha to use in ILT procedure
+        """
+        if not self.isiter:
+            alpha_opt = self.alpha
+        
+        p, fity, chi2 = self._fit_single(alpha_opt)
+        p /= self.z
+        plt.semilogx(self.z,p/sum(p))
+        plt.ylabel('Probability Density')
+        plt.xlabel(r'$\lambda$')
+        plt.tight_layout()
     
     def fit(self,alpha,n=1000,T1=None,maxiter=None):
         """
@@ -54,11 +83,13 @@ class bILT(ilt):
         
             alpha:      Tikhonov regularization parameter (may be list or number)
                         Try somewhere between 1e2 and 1e8
-            n:          number of T1 values in array within 0.01*tau and 100*tau
+            n:          number of T1 values in array within 0.01*tau and40214 100*tau
                         (ignored if T1 is not none)
             T1:         user-specified T1 array
             maxiter:    max number of iterations in solver
-        
+            
+            returns
+                same as ilt.fit
         """
         
         # set weights
@@ -70,6 +101,7 @@ class bILT(ilt):
             lifetime = bd.life[self.probe]
             log10_T1_min = np.log10(lifetime * 1e-2)
             log10_T1_max = np.log10(lifetime * 1e2)
+            
             # generate the T1 range
             T1 = np.logspace(log10_T1_min, log10_T1_max, n, base=10.0)
         
@@ -87,7 +119,6 @@ class bILT(ilt):
         with open(filename,'r') as fid:
             self.__dict__ = yaml.safe_load(fid.read())
         self._setup()
-        
             
         # make arrays
         for key in ('p',):
@@ -101,6 +132,7 @@ class bILT(ilt):
             lifetime = bd.life[self.probe]
             log10_T1_min = np.log10(lifetime * 1e-2)
             log10_T1_max = np.log10(lifetime * 1e2)
+            
             # generate the T1 range
             self.z = np.logspace(log10_T1_min, log10_T1_max, self.n, base=10.0)
             
@@ -111,7 +143,6 @@ class bILT(ilt):
         # assign some of the missing parts
         self.K = np.array([self.fn(self.x,i) for i in self.z]).T
     
-
     def write(self,filename,**notes):
         """
             Write to yaml file

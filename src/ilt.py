@@ -129,14 +129,20 @@ class ilt(object):
         """
             Draw fit or range of fits. 
             
-            alpha: if None draw:
-                        alpha v chi
-                        alpha v dchi/dalpha
-                        L-curve
-                    else draw:
-                        data & fit
-                        distribution 
+            alpha_opt:  if None draw:
+                            alpha v chi
+                            alpha v dchi/dalpha
+                            L-curve
+                        else draw:
+                            data & fit
+                            distribution 
             fig:    optional figure handle for redrawing when alpha_opt != None
+            
+            returns: (p, fity, chi2)
+            
+                p:      array of unnormalized weights
+                fity:   array of final fit function points
+                chi2:   chisquared value of fit
         """
         
         # check if range of alphas
@@ -261,12 +267,18 @@ class ilt(object):
     def fit(self,alpha,z,maxiter=None):
         """
             Run the non-negative least squares algorithm for a single value of 
-            alpha, the regularization parameter
+            alpha (the regularization parameter) or an array of alphas
         
+            alpha:      Tikhonov regularization parameter (may be list or number)
             z:          array of transformed values corresponding to the 
                         probabilities in the output (ex: np.logspace(-5,5,500))
-            alpha:      Tikhonov regularization parameter (may be list or number)
             maxiter:    max number of iterations in solver
+            
+            returns: (p, fity, chi2)
+        
+                p:      array of unnormalized weights
+                fity:   array of final fit function points
+                chi2:   chisquared value of fit
         """    
         
         # Set inputs
