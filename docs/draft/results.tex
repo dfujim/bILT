@@ -1,1 +1,49 @@
 \section{Results \label{sec:results}}
+
+\begin{comment}
+General plan of attack: 
+
+Show how the ILT compares to simulated data, where the underlying function is absolutely well defined. We should compare with fits to the appropriate function.  
+
+    We have a few relevant knobs to turn: 
+        - Underlying functions: exponential, bi-exponential, tri-exponential, stretched exponential.
+        - Spacing between the multi-exponential components. i.e. how far spread out are the different T1 values. What is the sensitivity? 
+        - Relative amplitudes of the components. Do the peak heights actually reflect the proper weights? 
+        - Amount of noise in the data. From the Monte-Carlo simulation, we can simply choose to run for a given number of counts.
+        - Initial asymmetry is also a thing that affects things
+       
+    In all testing cases we may want to invent a new way of determining how well the transformation performs in producing the correct distribution. Because the 
+    problem is ill-defined, I think that chisquared will always be pretty good. What we care about is therefore not the goodness of fit, but rather the goodness of 
+    the resulting distribution. Here are some possibilities: 
+
+        1. Fit the resulting distribution with a sum of gaussians (or something similar). Fix the mean value of the gaussian to the "True" T1 value of the underlying 
+           distribution, then take a chisquared of this fit. Allowing the width of the gaussian to vary accounts for any issues with alpha being off by a bit. Hopefully 
+           this tells how many peaks it finds and how close these peaks are to the true values. 
+
+        2. Compute something like a standard deviation: sum_i [ (T1_true-T1_i)^2 * p_i ]. This may only work for single exp function though.  
+        
+        3. ???
+
+Show how the ILT behaves with actual data
+
+    Ideally I think this data should be published. We can then apply the ILT and compare to the result in the paper. We should aim for a really solid single exp, 
+    probably a strexp, and maybe a biexp. 
+
+    We could probably do the stats test with real data too. Just pick something that we know the functional form doesn't change, and see if there are large differences 
+    in the resulting distributions. Even better if these are repeat measurements at the same settings.  
+
+Figure list: 
+
+    For one run: 
+    1. Real SLR data + ILT fit function + normal fit function
+    2. ILT probability distribution
+    3. L curve
+    4. The other diagnostic curves (or maybe just one, the most useful?)
+    6. A plots showing the signature of: (a) strexp (b) const offset
+    5. A couple of summary plots showing the goodness of fit (somehow, see above for options other than chisq) as a function of (a) function (b) spacing for biexp (c) noise level
+    
+    Probably topping out at 8 figures or something. It will be long perhaps. 
+    
+
+\end{comment}
+
