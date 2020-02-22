@@ -40,3 +40,22 @@ NumPy~\cite{2011-vanderWalt-CSE-13-22},
 SciPy~\cite{2020-Virtanen-NM},
 and Matplotlib~\cite{2007-Hunter-CSE-9-90}.
 The \gls{nnls} optimization was performed via widely used Fortran subroutines~\cite{1995-Lawson-SLSP}.
+
+On implementation of \Cref{eq:rnnls} using the \gls{nnls} algorithm, one quickly realizes that the algorithm is useful only for solving equations of the form $L\mathbf{p} = \mathbf{z}$. This is resolved by defining the following variables in block form: 
+%
+\begin{align}
+    L &= 
+    \left(\begin{array}{c}
+        \Sigma K \\ \Gamma
+    \end{array}\right) &
+    \mathbf{z} &= \left(\begin{array}{c}
+        \Sigma\mathbf{y} \\ \bm{0}
+    \end{array}\right),
+\end{align}
+%
+where $K$ is defined by \Cref{eq:kernel}, $\Sigma$ is the diagonal matrix of reciprocal uncertainties, and $\Gamma$ is the regularization matrix. In general, the choice of $\Gamma$ is general, however in this work we define $\Gamma \equiv \alpha I$. It is trivial to then show that 
+%
+\begin{equation}
+||\mathbf{z}-L\mathbf{p}||^2 = ||\Sigma (\mathbf{y} - K\mathbf{p})||^2 + ||\Gamma\mathbf{p}||^2.
+\end{equation}
+%
