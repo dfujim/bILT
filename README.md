@@ -1,5 +1,14 @@
 # `bILT`: Inverse Laplace Transform (ILT) objects, optimized for β-NMR SLR data
 
+Table of Contents
+
+* [API definition](https://github.com/dfujim/bILT#api-definition)
+    * [bILT.ilt](https://github.com/dfujim/bILT#biltilt)
+    * [bILT.bILT](https://github.com/dfujim/bILT#biltbilt)
+* [Examples of usage](https://github.com/dfujim/bILT#examples-of-usage)
+    * [A general ILT](https://github.com/dfujim/bILT#a-general-ilt)
+    * [ILT of β-NMR SLR data](https://github.com/dfujim/bILT#ilt-of-%CE%B2-nmr-slr-data)
+
 ## API definition
 
 The `bILT` package provides two objects: [`ilt`](https://github.com/dfujim/bILT/blob/master/src/ilt.py) and [`bILT`](https://github.com/dfujim/bILT/blob/master/src/bILT.py). Both take the inverse Laplace transform of a data set, but the latter is optimized for β-NMR data. We now outline the API: 
