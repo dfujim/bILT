@@ -87,11 +87,14 @@ class data_generator(object):
         
         n = int(n)
         
-        # generate decay durations (exponential)
-        d_decay = -self.lifetime*np.log(1-np.random.random(n))
+        # generate how long each probe lives (exponential distribution)
+        t_life = np.random.exponential(self.lifetime, n)
         
-        # add implantation times (uniform)
-        t_decay = d_decay+np.random.random(n)*self.pulse_len
+        # generate when each probe is implantated (uniform distribution)
+        t_arrive = np.random.uniform(0, self.pulse_len, n)
+
+        # generate the time each probe decays
+        t_decay = t_arrive + t_life
         
         # polarization: if p is true, decay towards F, else towards B
         p = np.ones(n,dtype=bool)
@@ -100,7 +103,7 @@ class data_generator(object):
         depol = np.random.random(n)>p0
         
         # depolarize due to SLR function
-        depol += np.random.random(n) < 1-fn(d_decay)
+        depol += np.random.random(n) < 1 - fn(t_life)
         
         # if depolarized, set probability of decay to point randomly at F or B
         p[depol] = np.random.random(sum(depol))<0.5
