@@ -20,8 +20,13 @@ class data_generator(object):
             lifetime:   radioactive lifetime of probe in s
             pulse_len:  duration of beam on in s
             t:          measurement bin centers in s (the x axis)
+            theta_bins: bin centers for histogram of angles
+            theta_hist: counts for histogram of angles
                 
     """
+    
+    n_cumu_theta = 1000 # number of angles to use in the W(theta) inversion 
+    
     def __init__(self, dt=0.01, tmax=16, pulse_len=4, lifetime=1.2096, A=-0.3333, 
                  beta_Kenergy=6):
         """
@@ -85,11 +90,10 @@ class data_generator(object):
         """
             Generate the probe decays in each detector and histogram.
             
-            fn: function handle of decay function for each probe. Amplitude 1. 
+            fn: function handle of decay function for each probe. 
                 prototype: fn(t). 
                 
-                example: fn = lambda t: np.exp(-0.5*t)
-            p0: initial polarization 
+                example: fn = lambda t: 0.7*np.exp(-0.5*t)
             n: total number of probes to decay
         """
         
@@ -104,33 +108,23 @@ class data_generator(object):
         # generate the time each probe decays
         t_decay = t_arrive + t_life
         
-<<<<<<< HEAD
         # invert the cumulative distribution of the decay angles, W(theta) 
-        th = np.linspace(0,np.pi*2,1000)
-        rand = np.random.random(n)
-        a = self.v * self.A 
-        twopi = np.pi*2
-        y = [np.interp(r,(th+a*fn(t)*np.sin(th))/twopi,th) for r,t in zip(rand,d_decay)]
-        y = np.array(y)
-=======
-        # polarization: if p is true, decay towards F, else towards B
-        p = np.ones(n,dtype=bool)
+        theta = np.linspace(0, 2*np.pi, self.n_cumu_theta)
+        rand = np.random.uniform(0, 1, n)
+        prefac = self.v * self.A 
         
-        # depolarize based on initial polarization
-        depol = np.random.random(n)>p0
-        
-        # depolarize due to SLR function
-        depol += np.random.random(n) < 1 - fn(t_life)
->>>>>>> 98c75559249bb33a659e8170eb64b2ce9ce726d1
+        cumu_W = lambda t : (theta + prefac * fn(t) * np.sin(theta)) / (2*np.pi)
+        decay_angle_generator = (np.interp(r, cumu_W(t), theta) for r, t in zip(rand, t_life))
+        decay_angle = np.fromiter(decay_angle_generator, count=n, dtype=float)
         
         # get decay orientation: if True, point to F, else B
-        p = (y<(np.pi/2)) + (y>(3*np.pi/2))
+        is_forward = (decay_angle < (np.pi/2)) + (decay_angle > (3*np.pi/2))
         
         # histogram
-        self.F,_ = np.histogram(t_decay[p],bins=self.bins)
-        self.B,_ = np.histogram(t_decay[~p],bins=self.bins)
-        self.th_hist,self.th_bins = np.histogram(y,bins=360)
-        self.th_bins = (self.th_bins[1:]+self.th_bins[:-1])/2
+        self.F, _ = np.histogram(t_decay[is_forward],  bins=self.bins)
+        self.B, _ = np.histogram(t_decay[~is_forward], bins=self.bins)
+        self.theta_hist, self.theta_bins = np.histogram(decay_angle, bins=360)
+        self.theta_bins = (self.theta_bins[1:] + self.theta_bins[:-1]) / 2
         
     def asym(self, rebin=1):
         """
@@ -138,8 +132,8 @@ class data_generator(object):
         """
         
         # asym
-        a = (self.F-self.B)/(self.F+self.B)
-        da = 2*np.sqrt(self.B*self.F/(self.B+self.F)**3)
+        a = (self.B - self.F) / (self.F + self.B)
+        da = 2 * np.sqrt(self.B*self.F/(self.B+self.F)**3)
         
         self.a = a
         self.da = da
@@ -148,24 +142,31 @@ class data_generator(object):
         a,da = self._rebin((a,da),rebin)
         
         # rebin times
-        t_rebin = [np.mean(self.t[i:i+rebin]) for i in range(0,len(self.t),rebin)]
+        t_rebin = [np.mean(self.t[i:i+rebin]) for i in range(0, len(self.t), rebin)]
         
         return np.array((t_rebin,a,da))
     
     def draw_diagnostics(self, fn,  n=1e6, rebin=1):
         """
             Run and draw diagnosis plots
+            
+            fn: function handle of decay function for each probe. 
+                prototype: fn(t). 
+                
+                example: fn = lambda t: 0.7*np.exp(-0.5*t)
+            n: total number of probes to decay
+            rebin: for asymmetry drawing
         """
         
         # Run 
         t_start = time.time()
-        self.gen_counts(fn,n=n)
-        print('Runtime: ',time.time()-t_start,'s')
+        self.gen_counts(fn, n=n)
+        print('Runtime: ', time.time()-t_start, 's')
         
         # Counts
         plt.figure()
-        plt.plot(self.t,self.F,label='F')
-        plt.plot(self.t,self.B,label='B')
+        plt.plot(self.t, self.F, label='F')
+        plt.plot(self.t, self.B, label='B')
         plt.xlabel('Time (s)')
         plt.ylabel('Counts')
         plt.legend()
@@ -173,19 +174,19 @@ class data_generator(object):
 
         # draw asymmetry
         plt.figure()
-        plt.errorbar(*self.asym(rebin),fmt='.')
+        plt.errorbar(*self.asym(rebin), fmt='.')
         plt.xlabel('Time (s)')
-        plt.ylabel('(F-B)/(F+B)')
+        plt.ylabel('(B-F)/(B+F)')
         plt.tight_layout()
         
         # draw polar 
         plt.figure()
-        W = lambda t: (1+self.v*self.A*fn(t)*np.cos(self.th_bins))/(2*np.pi)
-        plt.polar(self.th_bins,self.th_hist/n,label='MC Sim')
-        plt.polar(self.th_bins,W(0)/sum(W(0)),label='W(t=0)')
-        plt.polar(self.th_bins,W(self.pulse_len)/sum(W(self.pulse_len)),label='W(t=%d s)'% int(self.pulse_len))
+        W = lambda t: (1 + self.v * self.A * fn(t) * np.cos(self.theta_bins)) / (2*np.pi)
+        plt.polar(self.theta_bins, self.theta_hist/n, label='MC Sim')
+        plt.polar(self.theta_bins, W(0)/sum(W(0)), label='W(t=0)')
+        plt.polar(self.theta_bins, W(self.pulse_len) / sum(W(self.pulse_len)),
+                  label='W(t=%d s)'% int(self.pulse_len))
         plt.gca().set_yticklabels(())
         plt.legend(bbox_to_anchor=(1,1))
-        
         
         plt.title('Distribution of Decay Angles')
