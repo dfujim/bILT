@@ -4,6 +4,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import root_scalar
+import time
 
 # =========================================================================== #
 class data_generator(object):
@@ -20,12 +22,15 @@ class data_generator(object):
             t:          measurement bin centers in s (the x axis)
                 
     """
-    def __init__(self, dt=0.01, tmax=16, pulse_len=4, lifetime=1.2096):
+    def __init__(self, dt=0.01, tmax=16, pulse_len=4, lifetime=1.2096, A=-0.3333, 
+                 beta_Kenergy=6):
         """
-            dt:         bin spacing in s
-            tmax:       duration of measurement cycle in s (beam on + beam off)
-            pulse_len:  duration of beam on in s
-            lifetime:   radioactive lifetime of probe in s
+            dt:             bin spacing in s
+            tmax:           duration of measurement cycle in s (beam on + beam off)
+            pulse_len:      duration of beam on in s
+            lifetime:       radioactive lifetime of probe in s
+            A:              intrinsic probe asymmetry
+            beta_energy:    kinetic energy of the beta decay in MeV
         """
         
         # set attributes
@@ -33,6 +38,9 @@ class data_generator(object):
         self.lifetime = lifetime
         self.bins = np.arange(dt,tmax,dt)
         self.t = np.arange(dt/2,tmax-dt*2,dt)
+        self.tmax = tmax
+        self.A = A
+        self.v = np.sqrt(1-(beta_Kenergy/0.51099895 + 1)**-2) # units of c
 
     def _rebin(self, xdx, rebin):
         """
@@ -73,7 +81,7 @@ class data_generator(object):
                 dx_rebin.append(1./wsum**0.5)
         return np.array([x_rebin,dx_rebin])
 
-    def gen_counts(self, fn, p0=0.1,  n=1e6):
+    def gen_counts(self, fn, n=1e6):
         """
             Generate the probe decays in each detector and histogram.
             
@@ -93,21 +101,22 @@ class data_generator(object):
         # add implantation times (uniform)
         t_decay = d_decay+np.random.random(n)*self.pulse_len
         
-        # polarization: if p is true, decay towards F, else towards B
-        p = np.ones(n,dtype=bool)
+        # invert the cumulative distribution of the decay angles, W(theta) 
+        th = np.linspace(0,np.pi*2,1000)
+        rand = np.random.random(n)
+        a = self.v * self.A 
+        twopi = np.pi*2
+        y = [np.interp(r,(th+a*fn(t)*np.sin(th))/twopi,th) for r,t in zip(rand,d_decay)]
+        y = np.array(y)
         
-        # depolarize based on initial polarization
-        depol = np.random.random(n)>p0
-        
-        # depolarize due to SLR function
-        depol += np.random.random(n) < 1-fn(d_decay)
-        
-        # if depolarized, set probability of decay to point randomly at F or B
-        p[depol] = np.random.random(sum(depol))<0.5
+        # get decay orientation: if True, point to F, else B
+        p = (y<(np.pi/2)) + (y>(3*np.pi/2))
         
         # histogram
         self.F,_ = np.histogram(t_decay[p],bins=self.bins)
         self.B,_ = np.histogram(t_decay[~p],bins=self.bins)
+        self.th_hist,self.th_bins = np.histogram(y,bins=360)
+        self.th_bins = (self.th_bins[1:]+self.th_bins[:-1])/2
         
     def asym(self, rebin=1):
         """
@@ -129,5 +138,40 @@ class data_generator(object):
         
         return np.array((t_rebin,a,da))
     
-    
+    def draw_diagnostics(self, fn,  n=1e6, rebin=1):
+        """
+            Run and draw diagnosis plots
+        """
+        
+        # Run 
+        t_start = time.time()
+        self.gen_counts(fn,n=n)
+        print('Runtime: ',time.time()-t_start,'s')
+        
+        # Counts
+        plt.figure()
+        plt.plot(self.t,self.F,label='F')
+        plt.plot(self.t,self.B,label='B')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Counts')
+        plt.legend()
+        plt.tight_layout()
 
+        # draw asymmetry
+        plt.figure()
+        plt.errorbar(*self.asym(rebin),fmt='.')
+        plt.xlabel('Time (s)')
+        plt.ylabel('(F-B)/(F+B)')
+        plt.tight_layout()
+        
+        # draw polar 
+        plt.figure()
+        W = lambda t: (1+self.v*self.A*fn(t)*np.cos(self.th_bins))/(2*np.pi)
+        plt.polar(self.th_bins,self.th_hist/n,label='MC Sim')
+        plt.polar(self.th_bins,W(0)/sum(W(0)),label='W(t=0)')
+        plt.polar(self.th_bins,W(self.pulse_len)/sum(W(self.pulse_len)),label='W(t=%d s)'% int(self.pulse_len))
+        plt.gca().set_yticklabels(())
+        plt.legend(bbox_to_anchor=(1,1))
+        
+        
+        plt.title('Distribution of Decay Angles')
