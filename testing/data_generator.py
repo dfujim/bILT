@@ -95,12 +95,16 @@ class data_generator(object):
         
         n = int(n)
         
-        # generate decay durations (exponential)
-        d_decay = -self.lifetime*np.log(1-np.random.random(n))
+        # generate how long each probe lives (exponential distribution)
+        t_life = np.random.exponential(self.lifetime, n)
         
-        # add implantation times (uniform)
-        t_decay = d_decay+np.random.random(n)*self.pulse_len
+        # generate when each probe is implantated (uniform distribution)
+        t_arrive = np.random.uniform(0, self.pulse_len, n)
+
+        # generate the time each probe decays
+        t_decay = t_arrive + t_life
         
+<<<<<<< HEAD
         # invert the cumulative distribution of the decay angles, W(theta) 
         th = np.linspace(0,np.pi*2,1000)
         rand = np.random.random(n)
@@ -108,6 +112,16 @@ class data_generator(object):
         twopi = np.pi*2
         y = [np.interp(r,(th+a*fn(t)*np.sin(th))/twopi,th) for r,t in zip(rand,d_decay)]
         y = np.array(y)
+=======
+        # polarization: if p is true, decay towards F, else towards B
+        p = np.ones(n,dtype=bool)
+        
+        # depolarize based on initial polarization
+        depol = np.random.random(n)>p0
+        
+        # depolarize due to SLR function
+        depol += np.random.random(n) < 1 - fn(t_life)
+>>>>>>> 98c75559249bb33a659e8170eb64b2ce9ce726d1
         
         # get decay orientation: if True, point to F, else B
         p = (y<(np.pi/2)) + (y>(3*np.pi/2))
