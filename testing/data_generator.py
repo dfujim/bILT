@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import root_scalar
 import time
+from multiprocessing import Pool
+from functools import partial
 
 # =========================================================================== #
 class data_generator(object):
@@ -26,6 +28,7 @@ class data_generator(object):
     """
     
     n_cumu_theta = 1000 # number of angles to use in the W(theta) inversion 
+    proc_Nmax = 1e6     # number of probes to handle per processor at any given time
     
     def __init__(self, dt=0.01, tmax=16, pulse_len=4, lifetime=1.2096, A=-0.3333, 
                  beta_Kenergy=6):
@@ -86,14 +89,15 @@ class data_generator(object):
                 dx_rebin.append(1./wsum**0.5)
         return np.array([x_rebin,dx_rebin])
 
-    def gen_counts(self, fn, n=1e6):
+    def _gen_counts(self, pol_fn, n):
         """
-            Generate the probe decays in each detector and histogram.
+            Worker function for generating the probe decays in each detector and 
+            histogram.
             
-            fn: function handle of decay function for each probe. 
-                prototype: fn(t). 
+            pol_fn: function handle of decay function for each probe. 
+                    prototype: pol_fn(t). 
                 
-                example: fn = lambda t: 0.7*np.exp(-0.5*t)
+                    example: pol_fn = lambda t: 0.7*np.exp(-0.5*t)
             n: total number of probes to decay
         """
         
@@ -113,7 +117,8 @@ class data_generator(object):
         rand = np.random.uniform(0, 1, n)
         prefac = self.v * self.A 
         
-        cumu_W = lambda t : (theta + prefac * fn(t) * np.sin(theta)) / (2*np.pi)
+        cumu_W = lambda t : (theta + prefac * pol_fn(t) * np.sin(theta)) / (2*np.pi)
+        # ~ decay_angle_generator = (np.interp(r, (theta + prefac * pol_fn(t) * np.sin(theta)) / (2*np.pi), theta) for r, t in zip(rand, t_life))
         decay_angle_generator = (np.interp(r, cumu_W(t), theta) for r, t in zip(rand, t_life))
         decay_angle = np.fromiter(decay_angle_generator, count=n, dtype=float)
         
@@ -121,10 +126,58 @@ class data_generator(object):
         is_forward = (decay_angle < (np.pi/2)) + (decay_angle > (3*np.pi/2))
         
         # histogram
-        self.F, _ = np.histogram(t_decay[is_forward],  bins=self.bins)
-        self.B, _ = np.histogram(t_decay[~is_forward], bins=self.bins)
-        self.theta_hist, self.theta_bins = np.histogram(decay_angle, bins=360)
-        self.theta_bins = (self.theta_bins[1:] + self.theta_bins[:-1]) / 2
+        F, _ = np.histogram(t_decay[is_forward],  bins=self.bins)
+        B, _ = np.histogram(t_decay[~is_forward], bins=self.bins)
+        theta_hist, theta_bins = np.histogram(decay_angle, bins=360)
+        theta_bins = (theta_bins[1:] + theta_bins[:-1]) / 2
+        
+        return (F,B,theta_hist,theta_bins)
+    
+    def gen_counts(self, pol_fn, n=1e6, nproc=4):
+        """
+            Generate the probe decays in each detector and histogram.
+            
+            pol_fn: function handle of decay function for each probe. 
+                    prototype: pol_fn(t). 
+                
+                    example: pol_fn = lambda t: 0.7*np.exp(-0.5*t)
+            n: total number of probes to decay
+            nproc: number of processors to use
+        """
+        
+        # split the probes into sets 
+        n_array = np.full(int(np.floor(n/self.proc_Nmax)), self.proc_Nmax)
+        if n % self.proc_Nmax > 0 : 
+            n_array = np.append(n_array, n % self.proc_Nmax)
+        
+        # initialize the output
+        F,B,theta_hist,theta_bins = self._gen_counts(pol_fn, 50)
+        n_array[0] -= 50
+        
+        # set up multiprocessing
+        results = []
+        p = Pool(nproc)
+        try:
+            
+            # start calculations
+            for i in n_array:
+                results.append(p.apply_async(self._gen_counts, (pol_fn, i)))
+            
+            # get results and sum histograms
+            for res in results: 
+                f,b,th,_ = res.get()            
+
+                F += f
+                B += b
+                theta_hist += th
+        finally:
+            p.close()
+            
+        # save results 
+        self.F = F
+        self.B = B
+        self.theta_bins = theta_bins
+        self.theta_hist = theta_hist
         
     def asym(self, rebin=1):
         """
@@ -146,7 +199,7 @@ class data_generator(object):
         
         return np.array((t_rebin,a,da))
     
-    def draw_diagnostics(self, fn,  n=1e6, rebin=1):
+    def draw_diagnostics(self, fn,  n=1e6, rebin=1, nproc=4):
         """
             Run and draw diagnosis plots
             
@@ -156,11 +209,12 @@ class data_generator(object):
                 example: fn = lambda t: 0.7*np.exp(-0.5*t)
             n: total number of probes to decay
             rebin: for asymmetry drawing
+            nproc: number of processors to use
         """
         
         # Run 
         t_start = time.time()
-        self.gen_counts(fn, n=n)
+        self.gen_counts(fn, n=n, nproc=nproc)
         print('Runtime: ', time.time()-t_start, 's')
         
         # Counts
