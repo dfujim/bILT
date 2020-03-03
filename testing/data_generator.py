@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import root_scalar
 import time
 from multiprocessing import Pool
+import pandas as pd
 
 # =========================================================================== #
 class data_generator(object):
@@ -23,7 +24,6 @@ class data_generator(object):
             t:          measurement bin centers in s (the x axis)
             theta_bins: bin centers for histogram of angles
             theta_hist: counts for histogram of angles
-                
     """
     
     n_cumu_theta = 1000 # number of angles to use in the W(theta) inversion 
@@ -255,3 +255,27 @@ class data_generator(object):
         
         return (FB,t)
         
+    def read_csv(self,filename):
+        """
+            Read B, F, and t from csv. Useful for making use of asym calculator
+        """
+        df = pd.read_csv(filename)
+        
+        self.B = df['B'].values
+        self.F = df['F'].values
+        self.t = df['t'].values
+        
+    def to_csv(self,*args,**kwargs):
+        """
+            Write B, F, and t to csv. 
+            Pass arguments to pandas.DataFrame.to_csv()
+        """
+        
+        # make the output dataframe
+        df = pd.DataFrame({'F':self.F,'B':self.B,'t':self.t})
+        
+        # set input defaults
+        if 'index' not in kwargs:
+            kwargs['index'] = False
+        
+        df.to_csv(*args,**kwargs)
