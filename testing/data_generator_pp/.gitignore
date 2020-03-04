@@ -1,0 +1,4 @@
+*.o
+*.root
+.depend
+data_generator
