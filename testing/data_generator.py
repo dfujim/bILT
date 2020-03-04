@@ -4,6 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.constants import physical_constants
 from scipy.optimize import root_scalar
 import time
 from multiprocessing import Pool
@@ -47,7 +48,7 @@ class data_generator(object):
         self.t = np.arange(dt/2,tmax-dt*2,dt)
         self.tmax = tmax
         self.A = A
-        self.v = np.sqrt(1-(beta_Kenergy/0.51099895 + 1)**-2) # units of c
+        self.v = np.sqrt(1-(beta_Kenergy/physical_constants["electron mass energy equivalent in MeV"][0] + 1)**-2) # units of c
 
     def _rebin(self, xdx, rebin):
         """
