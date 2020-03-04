@@ -1,4 +1,9 @@
+# ignore file without extensions (e.g., binary executables)
+# https://stackoverflow.com/a/19023985
+*
+!/**/
+!*.*
+# specifics for this project
 *.o
 *.root
 .depend
-data_generator
