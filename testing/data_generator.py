@@ -5,7 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import root_scalar
-import time
+import time, datetime
 from multiprocessing import Pool
 import pandas as pd
 
@@ -26,11 +26,12 @@ class data_generator(object):
             theta_hist: counts for histogram of angles
     """
     
-    n_cumu_theta = 1000 # number of angles to use in the W(theta) inversion 
+    comment_char = '#'
+    n_cumu_theta = 200  # number of angles to use in the W(theta) inversion 
     n_angle_bins = 360  # number of bins in histogram of angles
     
     def __init__(self, dt=0.01, tmax=16, pulse_len=4, lifetime=1.2096, A=-0.3333, 
-                 beta_Kenergy=6):
+                 beta_file='beta_8Li.csv'):
         """
             dt:             bin spacing in s
             tmax:           duration of measurement cycle in s (beam on + beam off)
@@ -46,7 +47,10 @@ class data_generator(object):
         self.bins = np.arange(dt,tmax,dt)
         self.t = np.arange(dt/2,tmax-dt*2,dt)
         self.tmax = tmax
+        self.dt = dt
         self.A = A
+        self.beta_file = beta_file
+        beta_Kenergy = 6
         self.v = np.sqrt(1-(beta_Kenergy/0.51099895 + 1)**-2) # units of c
 
     def _rebin(self, xdx, rebin):
@@ -259,23 +263,48 @@ class data_generator(object):
         """
             Read B, F, and t from csv. Useful for making use of asym calculator
         """
-        df = pd.read_csv(filename)
+        df = pd.read_csv(filename,comment=self.comment_char)
         
         self.B = df['B'].values
         self.F = df['F'].values
         self.t = df['t'].values
         
-    def to_csv(self,*args,**kwargs):
+    def to_csv(self,pol_fn_str,filename,*args,**kwargs):
         """
             Write B, F, and t to csv. 
-            Pass arguments to pandas.DataFrame.to_csv()
+            
+            pol_fn_str: a string indicating the type of relaxation function that 
+                        was used
+            
+            Pass other arguments to pandas.DataFrame.to_csv()
         """
         
+        # write the header information
+        header = [  'Monte-Carlo Simulation of β-NMR data',
+                    str(datetime.datetime.now()),'',
+                    'Relaxation function                        : %s' % pol_fn_str,
+                    'Number of implanted ions                   : %g' % sum(self.theta_hist),
+                    'Number of detected ions                    : %g' % sum(self.F+self.B),
+                    'Pulse length (s)                           : %g' % self.pulse_len,
+                    'Probe lifetime                             : %g' % self.lifetime,
+                    'Histogram max time                         : %g' % self.tmax,
+                    'Histogram bin spacing                      : %g' % self.dt,
+                    'Intrinsic asymmetry parameter A            : %g' % self.A,
+                    'Electron decay energy disribution          : %s' % self.beta_file,
+                    'Number of angles used in W(theta) inversion: %g' % self.n_cumu_theta,
+                    ]
+        header = ('\n%s '%self.comment_char).join(header)
+        header = '{0} {1} \n{0}\n'.format(self.comment_char,header)
+        
+        with open(filename,'w') as fid:
+            fid.write(header)
+        
         # make the output dataframe
-        df = pd.DataFrame({'F':self.F,'B':self.B,'t':self.t})
+        df = pd.DataFrame({'t':self.t,'F':self.F,'B':self.B})
         
         # set input defaults
         if 'index' not in kwargs:
             kwargs['index'] = False
         
-        df.to_csv(*args,**kwargs)
+        kwargs['mode'] = 'a+'
+        df.to_csv(filename,*args,**kwargs)
