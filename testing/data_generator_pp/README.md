@@ -23,3 +23,11 @@ root [2] hsN->Draw("nostack plc") // draw the four raw histograms
 root [3] hsA->Draw("nostack") // draw the asymmtry in both helicities
 root [4] hA->Draw() // draw the 4-counter combined asymmetry
 ```
+
+The output root file can be translated to a csv using the following command: 
+
+```bash
+python3 output2csv.py filename.root
+```
+
+The resulting file name has the format `filename.csv`.
