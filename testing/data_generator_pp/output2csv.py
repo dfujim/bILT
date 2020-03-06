@@ -4,14 +4,13 @@
 # Mar 2020
 
 import os, sys
-import datetime
 from ROOT import TH1D, TFile
 import pandas as pd
 import numpy as np
 
 
 # =========================================================================== #
-def output2csv(filename):
+def output2csv(filename,header=''):
 
     # load file 
     fid = TFile(filename)
@@ -39,14 +38,11 @@ def output2csv(filename):
     filename2 = os.path.splitext(filename)[0]+".csv"
     
     # write header
-    header = '\n'.join(('# Histograms and asymmetries for MC simulation of β-NMR data.',
-                        '# Translated from hisotrams in ROOT file "%s"' % filename,
-                        '# Translated on %s' % str(datetime.datetime.now()),
-                        '# ',
-                        '# Errors are marked with prefix "d"',
-                        '# Ac denotes the four-counter combined asymmetry',
-                        '# Times (t) are denoted in seconds',
-                        '# \n'))
+    header += '\n'.join(('# ',
+                         '# Errors are marked with prefix "d"',
+                         '# Ac denotes the four-counter combined asymmetry',
+                         '# Times (t) are denoted in seconds',
+                         '# \n'))
     
     with open(filename2,'w') as fout: 
         fout.write(header)
@@ -63,6 +59,7 @@ if __name__ == "__main__":
     try:
         filename = sys.argv[1]
     except IndexError:
-        print('Usage: output2csv.py filename')
-    else:
-        output2csv(filename)
+        print('Usage: output2csv.py filename header')
+        sys.exit(0)
+        
+    output2csv(filename)
