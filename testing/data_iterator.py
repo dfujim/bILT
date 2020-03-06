@@ -19,8 +19,14 @@ class data_iterator(object):
     hist_tmax = 16.0
     filename = 'output'
     
-    def __init__(self,output_dir):
+    def __init__(self,output_dir,inputs_to_save=None):
+        """
+            output_dir:         save files to this location
+            inputs_to_save:     dict, if not none, write this to yaml and csv
+                                ex: {"T1":14.23}
+        """
         self.output_dir = output_dir
+        self.inputs_to_save = inputs_to_save
         
     def run(self):
         
@@ -43,6 +49,11 @@ class data_iterator(object):
                 'histogram t_max':              self.hist_tmax
                 }
     
+        # add inputs to save
+        if self.inputs_to_save is not None: 
+            yaml_dict = {**yaml_dict,**self.inputs_to_save}
+    
+        # write config file
         with open(self.filename+'.yaml','w') as fid:
             yaml.safe_dump(yaml_dict,fid)
 
