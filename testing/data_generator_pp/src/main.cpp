@@ -16,6 +16,7 @@
 #include <TH1D.h>
 #include <THStack.h>
 #include <TStyle.h>
+#include <TVectorD.h>
 
 #include <omp.h>
 
@@ -354,6 +355,13 @@ int main(int argc, char **argv) {
 
   // fpbe.Write();
   // rpbe->Write();
+
+  // store the stats from the MC simulation in the ROOT file
+  TVectorD mc_stats(2);
+  mc_stats[0] = n_decays;
+  mc_stats[1] = diff.count();
+
+  mc_stats.Write("mc_stats");
 
   file->Write();
 
