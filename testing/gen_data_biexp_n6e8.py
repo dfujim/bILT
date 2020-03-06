@@ -20,7 +20,7 @@ d.n = 6e8
 
 # set up variable biexponential relaxation 
 fn = '0.35 * (exp(-x) + exp(-%f*x))'
-T1b = np.logspace(-1,2,5)
+T1b = np.logspace(-1,2,25)
 
 for i in T1b: 
     d.filename = (filename % float(i)).replace('.','p')
