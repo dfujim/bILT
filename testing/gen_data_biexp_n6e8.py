@@ -16,7 +16,7 @@ filename = 'T1b_%.2f'
 d = data_iterator(output_dir)
 
 # set constants
-d.n = 6e5
+d.n = 6e8
 
 # set up variable biexponential relaxation 
 fn = '0.35 * (exp(-x) + exp(-%f*x))'
