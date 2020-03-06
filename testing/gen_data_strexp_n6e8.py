@@ -1,4 +1,4 @@
-# Generate data based on seperation between biexponential SLR rates
+# Generate data based on stretching exponent
 # Derek Fujimoto
 # Mar 2020
 

@@ -1,4 +1,4 @@
-# Generate data based on seperation between biexponential SLR rates
+# Generate data based on changes in initial polarization
 # Derek Fujimoto
 # Mar 2020
 
