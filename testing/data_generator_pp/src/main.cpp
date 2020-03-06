@@ -45,11 +45,6 @@ double W(double theta, double A = 1.0, double P = 1.0, double v_over_c = 1.0) {
   return 1.0 + v_over_c * A * P * std::cos(theta);
 }
 
-// simple exponential relaxation
-//~ double rlx(double time, double amplitude = 1.0, double lambda = 1.0) {
-  //~ return amplitude * std::exp(-lambda * time);
-//~ }
-
 // fractional velocity
 double v_over_c(double E_k_keV, double rest_mass_MeV = 0.51099895000) {
   double E_k_MeV = E_k_keV * 1e-3;
@@ -76,12 +71,13 @@ int main(int argc, char **argv) {
   std::cout << " - Lifetime (s): " << config["lifetime (s)"].as<std::string>() << "\n";
   std::cout << " - Beam Pulse (s): " << config["beam pulse (s)"].as<std::string>() << "\n";
   std::cout << " - A_beta: " << config["A_beta"].as<std::string>() << "\n";
-  std::cout << " - Polarization function f(x): " << config["polarization function f(x)"].as<std::string>() << "\n";
+  std::cout << " - Polarization function f(x): \"" << config["polarization function f(x)"].as<std::string>() << "\"\n";
   std::cout << "Saving the generated histograms to " << config["output"].as<std::string>() << " with:\n";
   std::cout << " - n_bins: " << config["histogram n_bins"].as<std::string>() << "\n";
   std::cout << " - t_min: " << config["histogram t_min"].as<std::string>() << "\n";
   std::cout << " - t_max: " << config["histogram t_max"].as<std::string>() << "\n";
   std::cout << "\n";
+  std::cout << "Writing output to \"" << config["output"].as<std::string>() <<"\"\n";
   
   
   // std::random_device rd;
@@ -147,6 +143,10 @@ int main(int argc, char **argv) {
     // create the theta distribution using
     std::vector<double> weight_p;
     std::vector<double> weight_m;
+    
+    // reserve memory for vectors
+    weight_p.reserve(theta_list.size());
+    weight_m.reserve(theta_list.size());
 
     // what is the energy of the emitted beta?
     double e_p = d_energy(prng);
