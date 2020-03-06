@@ -46,9 +46,9 @@ double W(double theta, double A = 1.0, double P = 1.0, double v_over_c = 1.0) {
 }
 
 // simple exponential relaxation
-double rlx(double time, double amplitude = 1.0, double lambda = 1.0) {
-  return amplitude * std::exp(-lambda * time);
-}
+//~ double rlx(double time, double amplitude = 1.0, double lambda = 1.0) {
+  //~ return amplitude * std::exp(-lambda * time);
+//~ }
 
 // fractional velocity
 double v_over_c(double E_k_keV, double rest_mass_MeV = 0.51099895000) {
@@ -75,9 +75,8 @@ int main(int argc, char **argv) {
   std::cout << " - n_probes: " << config["n"].as<std::string>() << "\n";
   std::cout << " - Lifetime (s): " << config["lifetime (s)"].as<std::string>() << "\n";
   std::cout << " - Beam Pulse (s): " << config["beam pulse (s)"].as<std::string>() << "\n";
-  std::cout << " - Lambda (1/s): " << config["lambda (1/s)"].as<std::string>() << "\n";
-  std::cout << " - P_0: " << config["P_0"].as<std::string>() << "\n";
   std::cout << " - A_beta: " << config["A_beta"].as<std::string>() << "\n";
+  std::cout << " - Polarization function f(x): " << config["polarization function f(x)"].as<std::string>() << "\n";
   std::cout << "Saving the generated histograms to " << config["output"].as<std::string>() << " with:\n";
   std::cout << " - n_bins: " << config["histogram n_bins"].as<std::string>() << "\n";
   std::cout << " - t_min: " << config["histogram t_min"].as<std::string>() << "\n";
@@ -121,8 +120,9 @@ int main(int argc, char **argv) {
   // total number of decays to simulate
   const unsigned int n_decays = config["n"].as<double>();
   const double A_8Li = config["A_beta"].as<double>();
-  const double P_0 = config["P_0"].as<double>();
-  const double lambda = config["lambda (1/s)"].as<double>();
+  
+  // relaxation function 
+  TF1 rlx = TF1("rlx",config["polarization function f(x)"].as<std::string>().c_str(),0,t_max*10);
 
   // time the simulation
   auto start = std::chrono::high_resolution_clock::now();
@@ -141,8 +141,8 @@ int main(int argc, char **argv) {
     double t_detect_m = t_arrive_m + t_decay_m;
 
     // polarization at the time of decay
-    double p_decay_p = rlx(t_decay_p, P_0, lambda);
-    double p_decay_m = rlx(t_decay_m, -P_0, lambda);
+    double p_decay_p = rlx(t_decay_p);
+    double p_decay_m = -rlx(t_decay_m);
 
     // create the theta distribution using
     std::vector<double> weight_p;

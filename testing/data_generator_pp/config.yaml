@@ -1,9 +1,8 @@
 lifetime (s): 1.2096
-lambda (1/s): 1.0
+polarization function f(x): 0.7 * exp(-x)
 beam pulse (s): 4.0
 A_beta: -0.3333333333
-P_0: 0.7
-n: 1e5
+n: 1e6
 output: output.root
 histogram n_bins: 1600
 histogram t_min: 0.0
