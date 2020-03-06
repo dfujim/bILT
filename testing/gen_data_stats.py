@@ -6,7 +6,7 @@ from bILT.testing.data_iterator import data_iterator
 import os
 
 # where to put the files
-output_dir = "data_stats"
+output_dir = "data/stats"
 
 # set up the file names
 filename = 'n%d'
