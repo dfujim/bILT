@@ -15,7 +15,7 @@ filename = 'amp%.1f'
 d = data_iterator(output_dir)
 
 # set constants
-d.n = 6e5
+d.n = 6e8
 
 # set up variable biexponential relaxation 
 fn = '%f * exp(-x)'
