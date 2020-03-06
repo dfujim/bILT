@@ -12,7 +12,7 @@ output_dir = "data/stats"
 filename = 'n%d'
 
 # we are varying the number of counts
-n = 10**np.arange(3,6)
+n = np.concatenate((np.arange(1,10)*1e6,np.arange(1,10)*1e7,np.arange(1,11)*1e8))
 
 # run the data generator
 d = data_iterator(output_dir)
