@@ -4,6 +4,7 @@
 
 from bILT.testing.data_iterator import data_iterator
 import os
+import numpy as np
 
 # where to put the files
 output_dir = "data/biexp_n6e8"
