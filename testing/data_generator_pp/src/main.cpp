@@ -215,8 +215,10 @@ int main(int argc, char **argv) {
   std::cout << "\n";
   */
 
-  //
-  // TCanvas *c1 = new TCanvas("c1", "c1");
+  // create a canvas to suppress warning of automatic creation
+  TCanvas c1("c1", "c1");
+  
+  // 
   THStack hsN("hsN", "All detectors;Time (s); Counts");
   hsN.Add(&hF_p);
   hsN.Add(&hB_p);
