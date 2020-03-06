@@ -4,9 +4,7 @@
 
 import yaml,os,sys
 import datetime 
-
-sys.path.append('data_generator_pp/')
-from output2csv import output2csv
+from bILT.testing.output2csv import output2csv
 
 class data_iterator(object):
 
@@ -28,7 +26,9 @@ class data_iterator(object):
         
         # make output directory
         os.makedirs(self.output_dir, exist_ok=True)
-        os.chdir(self.output_dir)
+        rootfile = self.filename+'.root'
+        csvfile = self.filename+'.csv'
+        yamlfile = self.filename+'.yaml'
         
         # generate run file
         yaml_dict = {
@@ -37,7 +37,7 @@ class data_iterator(object):
                 'beam pulse (s)':               self.beam_pulse,
                 'A_beta':                       self.A_beta,
                 'n':                            self.n,
-                'output':                       self.filename+'.root',
+                'output':                       rootfile,
                 'histogram n_bins':             self.hist_nbins,
                 'histogram t_min':              self.hist_tmin,
                 'histogram t_max':              self.hist_tmax
@@ -47,7 +47,7 @@ class data_iterator(object):
             yaml.safe_dump(yaml_dict,fid)
 
         # run 
-        os.system('../data_generator_pp/data_generator_pp %s.yaml' % self.filename)
+        os.system('data_generator_pp/data_generator_pp %s' % yamlfile)
 
         # make header for csv
         header = ['Monte Carlo simulation of β-NMR data',
@@ -58,7 +58,11 @@ class data_iterator(object):
         header = '# ' + header + '\n'
         
         # convert to csv
-        output2csv(self.filename+'.root',header)
+        output2csv(rootfile,header)
 
         # remove root file 
-        os.remove(self.filename+'.root')
+        os.remove(rootfile)
+        
+        # move files
+        os.rename(csvfile,os.path.join(self.output_dir,csvfile))
+        os.rename(yamlfile,os.path.join(self.output_dir,yamlfile))
