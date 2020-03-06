@@ -9,7 +9,7 @@ import os
 output_dir = "data/stats"
 
 # set up the file names
-filename = 'n%d'
+filename = 'n%g'
 
 # we are varying the number of counts
 n = np.concatenate((np.arange(1,10)*1e6,np.arange(1,10)*1e7,np.arange(1,11)*1e8))
