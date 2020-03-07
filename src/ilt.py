@@ -174,8 +174,8 @@ class ilt(object):
             ax1.set_xlabel("$x$")
             
             # draw the probability distribution 
-            ax2.semilogx(self.z,p/np.sum(p))
-            ax2.set_ylabel("Probability Density")
+            ax2.semilogx(self.z,p)
+            ax2.set_ylabel("Weight")
             ax2.set_xlabel("$z$")
             
             ax1.set_title(r"$\alpha = %g$" % alpha_opt)
