@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from bILT.testing.ilt4sim import ilt4sim
+from bILT.testing.discriminator import discriminator
 from tqdm import tqdm
 
 # get all durations
@@ -19,39 +20,41 @@ durations = durations[idx]
 
 # run the solver
 def draw(alpha,label):
-    pmean = []
-    pstd = []
+    width = []
+    height = []
+    loc = []
     for f in tqdm(files): 
         laplace = ilt4sim(f)
         laplace.fit(alpha)
         z = laplace.z
         p = laplace.p
         
+        # get T1 not 1/T1
+        z = 1/z
+        
         # normalze
+        p /= z
         p /= sum(p)
         
-        # remove noise
-        idx = (z>0.1) * (z<10)
-        z = z[idx]
-        p = p[idx]
-        
         # stats
-        u = sum(p*z)
-        pmean.append(u)
-        pstd.append(sum(p*(z-u)**2))
+        l,h,w = discriminator(z,p)
         
-    pmean = np.array(pmean)
-    pstd = np.array(pstd)
-
-    # make T1 not 1/T1
-    pstd /= pmean**2
-    pmean = 1/pmean
+        # only keep the largest peak. Hopefully this is the one we want.
+        i = np.argmax(h)
+        
+        loc.append(l[i])
+        height.append(h[i])
+        width.append(w[i])
+    
+    height = np.array(height)
+    width = np.array(width)
+    loc = np.array(loc)
 
     # draw
-    fig = plt.semilogx(durations,pmean,'.-',label=label)
-    plt.semilogx(durations,pmean+pstd,':',color=fig[0].get_color())
-    plt.semilogx(durations,pmean-pstd,':',color=fig[0].get_color())
-    plt.fill_between(durations,pmean+pstd,pmean-pstd,alpha=0.1,color=fig[0].get_color())
+    fig = plt.semilogx(durations,loc,'.-',label=label)
+    plt.semilogx(durations,loc+width,':',color=fig[0].get_color())
+    plt.semilogx(durations,loc-width,':',color=fig[0].get_color())
+    plt.fill_between(durations,loc+width,loc-width,alpha=0.1,color=fig[0].get_color())
     plt.xlabel('Number of Probes Implanted')
     plt.ylabel(r'$\langle T_1 \rangle$ (s)')
     plt.title(r'Single Exp ($T_1=1$)')
