@@ -19,10 +19,11 @@ files = files[idx]
 durations = durations[idx]
 
 # run the solver
-def draw(alpha,label):
+def draw(alpha,label,fig1,fig2):
     width = []
     height = []
     loc = []
+    num = []
     for f in tqdm(files): 
         laplace = ilt4sim(f)
         laplace.fit(alpha)
@@ -39,9 +40,11 @@ def draw(alpha,label):
         # stats
         l,h,w = discriminator(z,p)
         
-        # only keep the largest peak. Hopefully this is the one we want.
-        i = np.argmax(h)
+        # number of peaks
+        num.append(len(l))
         
+        # keep the peak closest to 1
+        i = np.argmin(np.abs(np.array(l)-1))
         loc.append(l[i])
         height.append(h[i])
         width.append(w[i])
@@ -50,16 +53,28 @@ def draw(alpha,label):
     width = np.array(width)
     loc = np.array(loc)
 
-    # draw
+    # draw location
+    plt.figure(fig1.number)
     fig = plt.semilogx(durations,loc,'.-',label=label)
     plt.semilogx(durations,loc+width,':',color=fig[0].get_color())
     plt.semilogx(durations,loc-width,':',color=fig[0].get_color())
     plt.fill_between(durations,loc+width,loc-width,alpha=0.1,color=fig[0].get_color())
     plt.xlabel('Number of Probes Implanted')
-    plt.ylabel(r'$\langle T_1 \rangle$ (s)')
+    plt.ylabel(r'Peak Location$ (s)')
     plt.title(r'Single Exp ($T_1=1$)')
     plt.legend()
     plt.tight_layout()
 
-draw(0,r'$\alpha = 0$')
-draw(1000,r'$\alpha = 10^3$')
+    # draw number of peaks
+    plt.figure(fig2.number)
+    plt.semilogx(durations,num,label=label)
+    plt.xlabel('Number of Probes Implanted')
+    plt.ylabel('Number of Peaks Found')
+    plt.title(r'Single Exp ($T_1=1$)')
+    plt.legend()
+    plt.tight_layout()
+
+    
+figures = [plt.figure() for i in range(2)]
+draw(0,r'$\alpha = 0$',*figures)
+draw(1000,r'$\alpha = 10^3$',*figures)
