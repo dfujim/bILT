@@ -217,8 +217,9 @@ class ilt4sim(ilt):
             ax1.set_xlabel("Time (s)")
             
             # draw the probability distribution 
-            p /= self.z # normalize
-            ax2.semilogx(1/self.z,p/sum(p))
+            z = 1/self.z
+            p /= z # normalize
+            ax2.semilogx(z,p/sum(p))
             ax2.set_ylabel("Probability Density")
             ax2.set_xlabel(r"$T_1$ ($s^{-1}$)")
             self.pnorm = p/sum(p)
