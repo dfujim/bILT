@@ -16,6 +16,7 @@
 #include <TH1D.h>
 #include <THStack.h>
 #include <TStyle.h>
+#include <TVectorD.h>
 
 #include <omp.h>
 
@@ -68,18 +69,25 @@ int main(int argc, char **argv) {
   std::cout << "Running new Monte Carlo simulation of β-NMR data!\n\n";
   std::cout << "Inputs:\n";
   std::cout << " - n_probes: " << config["n"].as<std::string>() << "\n";
-  std::cout << " - Lifetime (s): " << config["lifetime (s)"].as<std::string>() << "\n";
-  std::cout << " - Beam Pulse (s): " << config["beam pulse (s)"].as<std::string>() << "\n";
+  std::cout << " - Lifetime (s): " << config["lifetime (s)"].as<std::string>()
+            << "\n";
+  std::cout << " - Beam Pulse (s): "
+            << config["beam pulse (s)"].as<std::string>() << "\n";
   std::cout << " - A_beta: " << config["A_beta"].as<std::string>() << "\n";
-  std::cout << " - Polarization function f(x): \"" << config["polarization function f(x)"].as<std::string>() << "\"\n";
-  std::cout << "Saving the generated histograms to " << config["output"].as<std::string>() << " with:\n";
-  std::cout << " - n_bins: " << config["histogram n_bins"].as<std::string>() << "\n";
-  std::cout << " - t_min: " << config["histogram t_min"].as<std::string>() << "\n";
-  std::cout << " - t_max: " << config["histogram t_max"].as<std::string>() << "\n";
+  std::cout << " - Polarization function f(x): \""
+            << config["polarization function f(x)"].as<std::string>() << "\"\n";
+  std::cout << "Saving the generated histograms to "
+            << config["output"].as<std::string>() << " with:\n";
+  std::cout << " - n_bins: " << config["histogram n_bins"].as<std::string>()
+            << "\n";
+  std::cout << " - t_min: " << config["histogram t_min"].as<std::string>()
+            << "\n";
+  std::cout << " - t_max: " << config["histogram t_max"].as<std::string>()
+            << "\n";
   std::cout << "\n";
-  std::cout << "Writing output to \"" << config["output"].as<std::string>() <<"\"\n";
-  
-  
+  std::cout << "Writing output to \"" << config["output"].as<std::string>()
+            << "\"\n";
+
   // std::random_device rd;
   // std::mt19937_64 prng(rd());
   // std::mt19937_64 prng;
@@ -116,9 +124,11 @@ int main(int argc, char **argv) {
   // total number of decays to simulate
   const unsigned int n_decays = config["n"].as<double>();
   const double A_8Li = config["A_beta"].as<double>();
-  
-  // relaxation function 
-  TF1 rlx = TF1("rlx",config["polarization function f(x)"].as<std::string>().c_str(),0,t_max*10);
+
+  // relaxation function
+  TF1 rlx =
+      TF1("rlx", config["polarization function f(x)"].as<std::string>().c_str(),
+          0, t_max * 10);
 
   // time the simulation
   auto start = std::chrono::high_resolution_clock::now();
@@ -143,7 +153,7 @@ int main(int argc, char **argv) {
     // create the theta distribution using
     std::vector<double> weight_p;
     std::vector<double> weight_m;
-    
+
     // reserve memory for vectors
     weight_p.reserve(theta_list.size());
     weight_m.reserve(theta_list.size());
@@ -215,8 +225,10 @@ int main(int argc, char **argv) {
   std::cout << "\n";
   */
 
+  // create a canvas to suppress warning of automatic creation
+  TCanvas c1("c1", "c1");
+
   //
-  // TCanvas *c1 = new TCanvas("c1", "c1");
   THStack hsN("hsN", "All detectors;Time (s); Counts");
   hsN.Add(&hF_p);
   hsN.Add(&hB_p);
@@ -343,6 +355,13 @@ int main(int argc, char **argv) {
 
   // fpbe.Write();
   // rpbe->Write();
+
+  // store the stats from the MC simulation in the ROOT file
+  TVectorD mc_stats(2);
+  mc_stats[0] = n_decays;
+  mc_stats[1] = diff.count();
+
+  mc_stats.Write("mc_stats");
 
   file->Write();
 
