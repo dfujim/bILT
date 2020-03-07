@@ -29,7 +29,14 @@ def linear(x, slope, intercept):
 
 
 for d, fn in zip(data, filenames):
-    cpu = fn.split(".")[0].split("/")[-1].replace("_tm_", " (tm) ").replace("_", " ")
+    cpu = (
+        fn.split(".dat")[0]
+        .split("/")[-1]
+        .replace("_tm_", " (tm) ")
+        .replace("_TM_", " TM ")
+        .replace("_R_", " R ")
+        .replace("_", " ")
+    )
     ax.errorbar(d["n"], d["t"], yerr=d["t_error"], fmt="o", label=cpu, zorder=1)
 
     popt, pcov = curve_fit(linear, d["n"], d["t"], sigma=d["t_error"])
