@@ -25,5 +25,5 @@ beta = np.arange(0.3,1,0.1)
 for i in beta: 
     d.filename = (filename % float(i)).replace('.','p')
     d.fn = fn%i
-    d.inputs_to_save = {'T1 (1/s)':1,'beta':float(i)}
+    d.inputs_to_save = {'T1 (s)':1,'beta':float(i)}
     d.run()
