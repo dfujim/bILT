@@ -220,7 +220,7 @@ class ilt(object):
             
             # derivative of logs
             # https://stackoverflow.com/a/19459160
-            dlnchi_dlnalpha = np.gradient(ln_alpha) / np.gradient(ln_chi)
+            dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
             
             ax2.plot(self.alpha, dlnchi_dlnalpha, ".-")
             ax2.set_xlabel(r"$\alpha$")
