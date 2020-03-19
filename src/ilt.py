@@ -326,10 +326,9 @@ class ilt(object):
         # draw things for a single alpha only 
         if alpha_opt is not None:
             
-            # get opt data 
-            print(r"$\chi^{2} = %f$" % chi2)
-            rchi2 = chi2 / len(self.x)
-            print(r"$\tilde{\chi}^{2} = %f$" % rchi2)
+            # print chi
+            print(r"$\chi^{2} = %f$" % self.get_chi2())
+            print(r"$\tilde{\chi}^{2} = %f$" % self.get_rchi2())
             
             # get axes for drawing
             if fig is not None:
@@ -341,101 +340,27 @@ class ilt(object):
                 fig,(ax1,ax2) = plt.subplots(1,2,figsize=(10,5))
             
             # draw the fit on the data
-            ax1.errorbar(self.x,self.y,self.yerr,fmt='.k',zorder=1)
-            ax1.plot(self.x,fity,'r',zorder=2)
-            ax1.set_ylabel("$y$")
-            ax1.set_xlabel("$x$")
+            self.draw_fit(alpha_opt,ax1)
             
             # draw the probability distribution 
-            ax2.semilogx(self.z,p)
-            ax2.set_ylabel("Weight")
-            ax2.set_xlabel("$z$")
-            
-            ax1.set_title(r"$\alpha = %g$" % alpha_opt)
-            ax2.set_title(r"$\alpha = %g$" % alpha_opt)
-            plt.tight_layout()
-            
-            # return values 
-            return(p, fity, chi2)
+            self.draw_weights(alpha_opt,ax2)
         
         # draw for a range of alphas
         else:     
-            # get chi from the fit chisquared...
-            # (i.e., the Euclidean norm of the (weighted) fit residuals)
-            chi = np.sqrt(self.chi2)
-            # ...and the natural logarithm of alpha and chi
-            ln_alpha = np.log(self.alpha)
-            ln_chi = np.log(chi)
             
-            # calculate the norm of all the p-vectors
-            p_norm = np.array([norm(i) for i in self.p])
-            
-            # indentify the alpha that gives the minium in chi2
-            idx_min = np.argmin(self.chi2)
-            # highlight this point on the generated plots
-            chi2_min = self.chi2[idx_min]
-            chi_min = chi[idx_min]
-            alpha_min = self.alpha[idx_min]
-            p_norm_min = p_norm[idx_min]
-              
             # make canvas
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False,
                                            figsize=(6,7))
             
-            # draw chi2 as a function of alpha ------------------
-            ax1.plot(self.alpha, self.chi2, "o", zorder=1)
-            ax1.plot(alpha_min, chi2_min, "s", zorder=2)
-            ax1.set_ylabel(r"$\chi^{2}$")
-            ax1.set_yscale("log")
-            plt.tight_layout()
+            # draw chi2 as a function of alpha
+            self.draw_Ccurve(ax1)
             
-            # draw dchi/dalpha as a function of alpha ------------
+            # draw dchi/dalpha as a function of alpha
+            self.draw_Scurve(0.1,ax2)
             
-            # derivative of logs
-            # https://stackoverflow.com/a/19459160
-            dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
-            
-            ax2.plot(self.alpha, dlnchi_dlnalpha, ".-")
-            ax2.set_xlabel(r"$\alpha$")
-            ax2.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
-            ax2.axhline(0.1, linestyle="--", color="k", zorder=0,
-                label=r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha = 0.1$")
-            
-            ax2.legend()
-            ax2.set_xscale("log")
-        
-            # plot the L-curve ----------------------------------------
-            self.figp, axp = plt.subplots(1,1)
-            self.axp = axp
-            
-            self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
-            axp.plot(chi_min, p_norm_min, "s", zorder=2)
-            # annotate the parametric plot on mouse hover
-            self.annot = axp.annotate("",
-                                 xy=(0,0),
-                                 xytext=(50, 20),
-                                 textcoords='offset points', 
-                                 ha='right', 
-                                 va='bottom',
-                                 bbox=dict(boxstyle='round,pad=0.1',
-                                           fc='grey', 
-                                           alpha=0.1),
-                                 arrowprops=dict(arrowstyle = '->', 
-                                                 connectionstyle='arc3,rad=0'),
-                                 fontsize='xx-small')
-            self.annot.set_visible(False)
-            
-            # connect the hovering mechanism
-            self.figp.canvas.mpl_connect("motion_notify_event", self._hover)
-            
-            # axis labels
-            axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
-            axp.set_ylabel("$|| \mathbf{p} ||$")
-            axp.set_title("L-curve")
-
-            axp.set_xscale("log")
-            axp.set_yscale("log")
-            plt.tight_layout()
+            # plot the L-curve
+            plt.figure()
+            self.draw_Lcurve()
 
     def fit(self,alpha,maxiter=None):
         """
