@@ -137,169 +137,7 @@ class ilt(object):
 
         return (p, fity, chi2)
         
-    def draw_fit(self,alpha,ax=None):
-        """
-            Draw the fit and the data
-            
-            alpha:  regularization parameter
-            ax:     axis to draw in    
-        """
-        
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-        
-        # draw data
-        ax.errorbar(self.x,self.y,self.yerr,fmt='.k',zorder=0)
-        
-        # draw fit
-        fity = self.get_fit(alpha)
-        ax.plot(self.x,fity,'r',zorder=1)
-        
-        # plot elements
-        ax.set_xlabel('$x$')
-        ax.set_ylabel('$y$')
-        plt.tight_layout()
-        
-    def draw_weights(self,alpha,ax=None):
-        """
-            Draw the weights as a function of lamb
-            
-            alpha:  regularization parameter
-            ax:     axis to draw in    
-        """
-        
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-        
-        # draw the probability distribution 
-        ax.semilogx(self.lamb,self.get_weights(alpha))
-        ax.set_ylabel("Weight")
-        ax.set_xlabel("$\lambda$")
-        plt.tight_layout()
-    
-    def draw_logdist(self,alpha,ax=None):
-        """
-            Draw the weights as a function of lamb, normalized for a log 
-            distribution of lambda
-            
-            alpha:  regularization parameter
-            ax:     axis to draw in    
-        """
-        
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-        
-        # draw the probability distribution 
-        w = self.get_weights(alpha)/self.lamb
-        w /= np.sum(w)
-        ax.semilogx(self.lamb,w)
-        ax.set_ylabel("Probability Density")
-        ax.set_xlabel("$\lambda$")
-        plt.tight_layout()
-        
-    def draw_Lcurve(self):
-        """
-            Draw the L curve with fancy mouse hover and highlighting
-        """
-        
-        # make figure
-        self.figp = plt.gcf()
-        axp = plt.gca()
-        self.axp = axp
-        
-        # get data 
-        chi,p_norm = self.get_Lcurve()
-        
-        
-        # draw line
-        self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
-        # ~ axp.plot(chi_min, p_norm_min, "s", zorder=2)
-        
-        # annotate the parametric plot on mouse hover
-        self.annot = axp.annotate("",
-                             xy=(0,0),
-                             xytext=(50, 20),
-                             textcoords='offset points', 
-                             ha='right', 
-                             va='bottom',
-                             bbox=dict(boxstyle='round,pad=0.1',
-                                       fc='grey', 
-                                       alpha=0.1),
-                             arrowprops=dict(arrowstyle = '->', 
-                                             connectionstyle='arc3,rad=0'),
-                             fontsize='xx-small')
-        self.annot.set_visible(False)
-        
-        # connect the hovering mechanism
-        self.figp.canvas.mpl_connect("motion_notify_event", self._hover)
-        
-        # axis labels
-        axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
-        axp.set_ylabel("$|| \mathbf{p} ||$")
-        
-        axp.set_xscale("log")
-        axp.set_yscale("log")
-        plt.tight_layout()
-    
-    def draw_Scurve(self,threshold=-1, ax=None):
-        """
-            Draw alpha vs gradient of logs
-            
-            threshold:  if > 0, draw dotted line at this value
-            ax:         axis to draw in    
-        """
-        
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-            
-        alpha,dlnchi_dlnalpha = self.get_Scurve()
-        
-        ax.semilogx(alpha, dlnchi_dlnalpha, ".-")
-        ax.set_xlabel(r"$\alpha$")
-        ax.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
-        
-        if threshold > 0:
-            ax.axhline(threshold, linestyle="--", color="k", zorder=0,
-                label=r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha = %g$" % threshold)
-        
-            ax.legend()
-        plt.tight_layout()
-        
-    def draw_Ccurve(self,ax=None):
-        """
-            Draw the chisquared vs alpha
-            ax:     axis to draw in    
-        """
-        
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-            
-        ax.semilogx(*self.get_Ccurve())
-        ax.set_ylabel(r'$\chi^2/N$')
-        ax.set_xlabel(r'$\alpha$')
-        plt.tight_layout()
-        
-    def draw_rCcurve(self, ax=None):
-        """
-            Draw the reduced chisquared vs alpha
-            ax:     axis to draw in    
-        """
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-            
-            
-        ax.semilogx(*self.get_rCcurve())
-        ax.set_ylabel(r'$\chi^2/N$')
-        ax.set_xlabel(r'$\alpha$')
-        plt.tight_layout()
-    
-    def draw(self,alpha_opt=None,fig=None):
+    def draw(self, alpha_opt=None, fig=None):
         """
             Draw fit or range of fits. 
             
@@ -337,13 +175,13 @@ class ilt(object):
                     a.clear()
                 
             else:
-                fig,(ax1,ax2) = plt.subplots(1,2,figsize=(10,5))
+                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
             
             # draw the fit on the data
-            self.draw_fit(alpha_opt,ax1)
+            self.draw_fit(alpha_opt, ax=ax1)
             
             # draw the probability distribution 
-            self.draw_weights(alpha_opt,ax2)
+            self.draw_weights(alpha_opt, ax=ax2)
         
         # draw for a range of alphas
         else:     
@@ -353,16 +191,176 @@ class ilt(object):
                                            figsize=(6,7))
             
             # draw chi2 as a function of alpha
-            self.draw_Ccurve(ax1)
+            self.draw_Ccurve(ax=ax1)
             
             # draw dchi/dalpha as a function of alpha
-            self.draw_Scurve(0.1,ax2)
+            self.draw_Scurve(0.1, ax=ax2)
             
             # plot the L-curve
             plt.figure()
             self.draw_Lcurve()
 
-    def fit(self,alpha,maxiter=None):
+    def draw_fit(self, alpha, ax=None):
+        """
+            Draw the fit and the data
+            
+            alpha:  regularization parameter
+            ax:     axis to draw in    
+        """
+        
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+        
+        # draw data
+        ax.errorbar(self.x, self.y, self.yerr, fmt='.k', zorder=0)
+        
+        # draw fit
+        fity = self.get_fit(alpha)
+        ax.plot(self.x, fity, 'r', zorder=1)
+        
+        # plot elements
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$y$')
+        plt.tight_layout()
+        
+    def draw_Ccurve(self, ax=None):
+        """
+            Draw the chisquared vs alpha
+            ax:     axis to draw in    
+        """
+        
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+            
+        ax.semilogx(*self.get_Ccurve())
+        ax.set_ylabel(r'$\chi^2$')
+        ax.set_xlabel(r'$\alpha$')
+        plt.tight_layout()
+        
+    def draw_rCcurve(self, ax=None):
+        """
+            Draw the reduced chisquared vs alpha
+            ax:     axis to draw in    
+        """
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+            
+            
+        ax.semilogx(*self.get_rCcurve())
+        ax.set_ylabel(r'$\chi^2/N$')
+        ax.set_xlabel(r'$\alpha$')
+        plt.tight_layout()
+    
+    def draw_Lcurve(self):
+        """
+            Draw the L curve with fancy mouse hover and highlighting
+        """
+        
+        # make figure
+        self.figp = plt.figure()
+        axp = plt.gca()
+        self.axp = axp
+        
+        # get data 
+        chi,p_norm = self.get_Lcurve()
+        
+        # draw line
+        self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
+        
+        # annotate the parametric plot on mouse hover
+        self.annot = axp.annotate("",
+                             xy=(0, 0),
+                             xytext=(50, 20),
+                             textcoords='offset points', 
+                             ha='right', 
+                             va='bottom',
+                             bbox=dict(boxstyle='round,pad=0.1',
+                                       fc='grey', 
+                                       alpha=0.1),
+                             arrowprops=dict(arrowstyle='->', 
+                                             connectionstyle='arc3,rad=0'),
+                             fontsize='xx-small')
+        self.annot.set_visible(False)
+        
+        # connect the hovering mechanism
+        self.figp.canvas.mpl_connect("motion_notify_event", self._hover)
+        
+        # axis labels
+        axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
+        axp.set_ylabel("$|| \mathbf{p} ||$")
+        
+        axp.set_xscale("log")
+        axp.set_yscale("log")
+        plt.tight_layout()
+    
+    def draw_Scurve(self,threshold=-1, ax=None):
+        """
+            Draw alpha vs gradient of logs
+            
+            threshold:  if > 0, draw dotted line at this value
+            ax:         axis to draw in    
+        """
+        
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+            
+        alpha, dlnchi_dlnalpha = self.get_Scurve()
+        
+        ax.semilogx(alpha, dlnchi_dlnalpha, ".-")
+        ax.set_xlabel(r"$\alpha$")
+        ax.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
+        
+        if threshold > 0:
+            ax.axhline(threshold, linestyle="--", color="k", zorder=0,
+                label=r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha = %g$" % threshold)
+        
+            ax.legend()
+        plt.tight_layout()
+        
+    def draw_logdist(self, alpha, ax=None):
+        """
+            Draw the weights as a function of lamb, normalized for a log 
+            distribution of lambda
+            
+            alpha:  regularization parameter
+            ax:     axis to draw in    
+        """
+        
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+        
+        # draw the probability distribution 
+        w = self.get_weights(alpha) / self.lamb
+        w /= np.sum(w)
+        ax.semilogx(self.lamb, w)
+        ax.set_ylabel("Probability Density")
+        ax.set_xlabel("$\lambda$")
+        plt.tight_layout()
+        
+    def draw_weights(self, alpha, ax=None):
+        """
+            Draw the weights as a function of lamb
+            
+            alpha:  regularization parameter
+            ax:     axis to draw in    
+        """
+        
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+        
+        # draw the probability distribution 
+        ax.semilogx(self.lamb, self.get_weights(alpha))
+        ax.set_ylabel("Weight")
+        ax.set_xlabel("$\lambda$")
+        plt.tight_layout()
+    
+    def fit(self, alpha, maxiter=None):
         """
             Run the non-negative least squares algorithm for a single value of 
             alpha (the regularization parameter) or an array of alphas
@@ -382,23 +380,23 @@ class ilt(object):
         x = self.x
         
         # do list of alphas case
-        if isinstance(alpha,Iterable):
+        if isinstance(alpha, Iterable):
             self.isiter = True
             alpha = np.asarray(alpha)
             p = []
             fity = []
             chi2 = []
             
-            for a in tqdm(alpha,desc="NNLS optimization @ each alpha"):
+            for a in tqdm(alpha, desc="NNLS optimization @ each alpha"):
                 out = self._fit_single(a)
                 p.append(out[0])
                 fity.append(out[1])
                 chi2.append(out[2])
             
             new_results = pd.DataFrame({'alpha':alpha,
-                                    'p':p,
-                                    'fity':fity,
-                                    'chi2':chi2})
+                                        'p':p,
+                                        'fity':fity,
+                                        'chi2':chi2})
         
         # do a single alpha case
         else:
@@ -406,18 +404,18 @@ class ilt(object):
             p, fity, chi2 = self._fit_single(alpha)
             
             new_results = pd.DataFrame({'alpha':[alpha],
-                                    'p':[p],
-                                    'fity':[fity],
-                                    'chi2':[chi2]})
+                                        'p':[p],
+                                        'fity':[fity],
+                                        'chi2':[chi2]})
         
         # save the results
-        new_results.set_index('alpha',inplace=True)
-        self.results = pd.concat((self.results,new_results))
+        new_results.set_index('alpha', inplace=True)
+        self.results = pd.concat((self.results, new_results))
         
         # sort
         self.results.sort_index(inplace=True)
     
-    def get_fit(self,alpha):
+    def get_fit(self, alpha):
         """Calculate and return the fit points for a particular value of alpha"""
         
         # check if alpha is in the list of calculated alphas
@@ -425,9 +423,9 @@ class ilt(object):
             self.fit(alpha)
             
         # return the fit results
-        return self.results.loc[alpha,'fity']
+        return self.results.loc[alpha, 'fity']
         
-    def get_weights(self,alpha):
+    def get_weights(self, alpha):
         """
             Calculate and return the distribution of weights for a particular 
             value of alpha
@@ -438,9 +436,9 @@ class ilt(object):
             self.fit(alpha)
             
         # return the fit results
-        return self.results.loc[alpha,'p']
+        return self.results.loc[alpha, 'p']
     
-    def get_chi2(self,alpha):
+    def get_chi2(self, alpha):
         """Calculate and return the chisquared for a particular value of alpha"""
         
         # check if alpha is in the list of calculated alphas
@@ -448,9 +446,9 @@ class ilt(object):
             self.fit(alpha)
             
         # return the fit results
-        return self.results.loc[alpha,'chi2']
+        return self.results.loc[alpha, 'chi2']
     
-    def get_rchi2(self,alpha):
+    def get_rchi2(self, alpha):
         """Calculate and return the reduced chisquared for a particular value of alpha"""
         
         # check if alpha is in the list of calculated alphas
@@ -458,7 +456,7 @@ class ilt(object):
             self.fit(alpha)
             
         # return the fit results
-        return self.results.loc[alpha,'chi2']/len(self.x)
+        return self.results.loc[alpha, 'chi2'] / len(self.x)
     
     def get_Lcurve(self):
         """
@@ -472,7 +470,7 @@ class ilt(object):
         # calculate the norm of all the p-vectors
         p_norm = self.results['p'].apply(norm)
         
-        return (chi,p_norm)
+        return (chi, p_norm)
     
     def get_Scurve(self):
         """return ( alpha, dln(chi)/dln(alpha) )"""
@@ -486,7 +484,7 @@ class ilt(object):
         # take the gradient
         dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
         
-        return (self.results.index.values,dlnchi_dlnalpha)
+        return (self.results.index.values, dlnchi_dlnalpha)
     
     def get_rCcurve(self):
         """
@@ -494,7 +492,7 @@ class ilt(object):
             
             returns (alpha,rchi2)
         """
-        return (self.results.index.values, self.results['chi2'].values/len(self.x))
+        return (self.results.index.values, self.results['chi2'].values / len(self.x))
     
     def get_Ccurve(self):
         """
@@ -502,7 +500,7 @@ class ilt(object):
             
             returns (alpha,chi2)
         """
-        return (self.results.index.values,self.results['chi2'].values)
+        return (self.results.index.values, self.results['chi2'].values)
     
     def read(self,filename):
         """
@@ -512,19 +510,19 @@ class ilt(object):
         """
         
         # read file
-        with open(filename,'r') as fid:
+        with open(filename, 'r') as fid:
             self.__dict__ = yaml.safe_load(fid.read())
             
         # make arrays
-        for key in ('x','y','yerr','z','p','K' ):
+        for key in ('x', 'y', 'yerr', 'z', 'p', 'K' ):
             self.__dict__[key] = np.array(self.__dict__[key])
             
         if self.isiter:
-            for key in ('alpha','chi2'):
+            for key in ('alpha', 'chi2'):
                 self.__dict__[key] = np.array(self.__dict__[key])
         
         # assign some of the missing parts
-        self.S = np.diag(1/self.yerr)
+        self.S = np.diag(1 / self.yerr)
         
     def write(self,filename,**notes):
         """
@@ -538,20 +536,20 @@ class ilt(object):
         output = {**self.__dict__,**notes}
         
         # remove the useless attributes, or those too large to be useful
-        for key in ('fn','S','fity'):
+        for key in ('fn', 'S', 'fity'):
             del output[key]
             
         # make numpy arrays lists
-        for key in ('x','y','yerr','z','p','K'):
+        for key in ('x', 'y', 'yerr', 'z', 'p', 'K'):
             output[key] = output[key].tolist()
         
         if self.isiter:
-            for key in ('alpha','chi2'):
+            for key in ('alpha', 'chi2'):
                 output[key] = output[key].tolist()
         
         # write to file 
-        print("writing...",end=' ',flush=True)
-        with open(filename,'w') as fid:
+        print("writing...", end=' ', flush=True)
+        with open(filename, 'w') as fid:
             fid.write(yaml.safe_dump(output))
-        print("done",flush=True)
+        print("done", flush=True)
             
