@@ -137,46 +137,67 @@ class ilt(object):
 
         return (p, fity, chi2)
         
-    def draw_fit(self,alpha):
+    def draw_fit(self,alpha,ax=None):
         """
             Draw the fit and the data
+            
+            alpha:  regularization parameter
+            ax:     axis to draw in    
         """
         
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+        
         # draw data
-        plt.errorbar(self.x,self.y,self.yerr,fmt='.k',zorder=0)
+        ax.errorbar(self.x,self.y,self.yerr,fmt='.k',zorder=0)
         
         # draw fit
         fity = self.get_fit(alpha)
-        plt.plot(self.x,fity,'r',zorder=1)
+        ax.plot(self.x,fity,'r',zorder=1)
         
         # plot elements
-        plt.xlabel('$x$')
-        plt.ylabel('$y$')
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$y$')
         plt.tight_layout()
         
-    def draw_weights(self,alpha):
+    def draw_weights(self,alpha,ax=None):
         """
             Draw the weights as a function of lamb
+            
+            alpha:  regularization parameter
+            ax:     axis to draw in    
         """
         
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+        
         # draw the probability distribution 
-        plt.semilogx(self.lamb,self.get_weights(alpha))
-        plt.ylabel("Weight")
-        plt.xlabel("$\lambda$")
+        ax.semilogx(self.lamb,self.get_weights(alpha))
+        ax.set_ylabel("Weight")
+        ax.set_xlabel("$\lambda$")
         plt.tight_layout()
     
-    def draw_logdist(self,alpha):
+    def draw_logdist(self,alpha,ax=None):
         """
             Draw the weights as a function of lamb, normalized for a log 
             distribution of lambda
+            
+            alpha:  regularization parameter
+            ax:     axis to draw in    
         """
+        
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
         
         # draw the probability distribution 
         w = self.get_weights(alpha)/self.lamb
         w /= np.sum(w)
-        plt.semilogx(self.lamb,w)
-        plt.ylabel("Probability Density")
-        plt.xlabel("$\lambda$")
+        ax.semilogx(self.lamb,w)
+        ax.set_ylabel("Probability Density")
+        ax.set_xlabel("$\lambda$")
         plt.tight_layout()
         
     def draw_Lcurve(self):
@@ -223,16 +244,60 @@ class ilt(object):
         axp.set_yscale("log")
         plt.tight_layout()
     
-    def draw_Scurve(self):
+    def draw_Scurve(self,threshold=-1, ax=None):
         """
+            Draw alpha vs gradient of logs
+            
+            threshold:  if > 0, draw dotted line at this value
+            ax:         axis to draw in    
         """
         
-        pass
-    def draw_Ccurve(self):
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+            
+        alpha,dlnchi_dlnalpha = self.get_Scurve()
+        
+        ax.semilogx(alpha, dlnchi_dlnalpha, ".-")
+        ax.set_xlabel(r"$\alpha$")
+        ax.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
+        
+        if threshold > 0:
+            ax.axhline(threshold, linestyle="--", color="k", zorder=0,
+                label=r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha = %g$" % threshold)
+        
+            ax.legend()
+        plt.tight_layout()
+        
+    def draw_Ccurve(self,ax=None):
         """
+            Draw the chisquared vs alpha
+            ax:     axis to draw in    
         """
         
-        pass
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+            
+        ax.semilogx(*self.get_Ccurve())
+        ax.set_ylabel(r'$\chi^2/N$')
+        ax.set_xlabel(r'$\alpha$')
+        plt.tight_layout()
+        
+    def draw_rCcurve(self, ax=None):
+        """
+            Draw the reduced chisquared vs alpha
+            ax:     axis to draw in    
+        """
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+            
+            
+        ax.semilogx(*self.get_rCcurve())
+        ax.set_ylabel(r'$\chi^2/N$')
+        ax.set_xlabel(r'$\alpha$')
+        plt.tight_layout()
     
     def draw(self,alpha_opt=None,fig=None):
         """
@@ -262,7 +327,6 @@ class ilt(object):
         if alpha_opt is not None:
             
             # get opt data 
-            p, fity, chi2 = self._fit_single(alpha_opt)
             print(r"$\chi^{2} = %f$" % chi2)
             rchi2 = chi2 / len(self.x)
             print(r"$\tilde{\chi}^{2} = %f$" % rchi2)
