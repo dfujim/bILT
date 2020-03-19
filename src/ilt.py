@@ -125,6 +125,17 @@ class ilt(object):
 
         return (p, fity, chi2)
         
+    def draw_fit(self,alpha):
+        pass
+    def draw_weights(self,alpha):
+        pass
+    def draw_Lcurve(self):
+        pass
+    def draw_Scurve(self):
+        pass
+    def draw_Ccurve(self):
+        pass
+    
     def draw(self,alpha_opt=None,fig=None):
         """
             Draw fit or range of fits. 
@@ -315,6 +326,39 @@ class ilt(object):
         
         return (self.p,self.fity,self.chi2)
         
+    
+    def get_fit(self,alpha):
+        """Calculate and return the fit points for a particular value of alpha"""
+        
+        # check if alpha is in the list of calculated alphas
+        
+        
+    def get_weights(self,alpha):
+        """Calculate and return the distribution of weights for a particular value of alpha"""
+        pass
+    
+    def get_chi(self,alpha):
+        """Calculate and return the chisquared for a particular value of alpha"""
+        pass
+    
+    def get_rchi(self,alpha):
+        """Calculate and return the reduced chisquared for a particular value of alpha"""
+        pass
+    
+    def get_Lcurve(self):
+        """"""
+        pass
+    
+    def get_Scurve(self):
+        """"""
+        pass
+    
+    
+    def get_Ccurve(self):
+        """"""
+        pass
+    
+    
     def read(self,filename):
         """
             Read yaml file and set properties
