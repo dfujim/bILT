@@ -12,6 +12,7 @@
 import yaml
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections.abc import Iterable
@@ -28,17 +29,18 @@ class ilt(object):
         
         Attributes 
         
-            alpha:      Tikhonov regularization parameter      
             annot:      annotation object (blank, but shown on hover)
             axp:        L curve matplotlib axis
             line:       L curve line drawn, used for annotation shown on hover 
-            chi2:       chisquared value of fit
             figp:       L curve matplotlib figure
-            fity:       fit function corresponding to K*p
             fn:         function handle with signature f(x,w)
             isiter:     if True, alpha is a list, not a number
             maxiter:    max number of iterations in solver
             p:          array of probabilities corresponding to w, fit results
+            results:    fit results with index alpha and columns p, fity, chi2
+                        alpha:      Tikhonov regularization parameter      
+                        fity:       fit function corresponding to K*p
+                        chi2:       chisquared value of fit
             S:          diagonal error matrix: diag(1/yerr)
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
@@ -67,6 +69,9 @@ class ilt(object):
             
             # build error matrix
             self.S = np.diag(1/yerr)
+            
+            # data frame for storage
+            self.results = pd.DataFrame()
 
     def _annotate(self,ind):
         """
@@ -303,7 +308,7 @@ class ilt(object):
         # do list of alphas case
         if isinstance(alpha,Iterable):
             self.isiter = True
-            self.alpha = np.asarray(alpha)
+            alpha = np.asarray(alpha)
             p = []
             fity = []
             chi2 = []
@@ -313,19 +318,19 @@ class ilt(object):
                 p.append(out[0])
                 fity.append(out[1])
                 chi2.append(out[2])
-            
-            self.p = np.array(p)
-            self.fity = np.array(fity)
-            self.chi2 = np.array(chi2)
-            
+                
         # do a single alpha case
         else:
             self.isiter = False
-            self.alpha = alpha
-            self.p, self.fity, self.chi2 = self._fit_single(alpha)
+            p, fity, chi2 = self._fit_single(alpha)
         
-        return (self.p,self.fity,self.chi2)
-        
+        # save the results
+        new_results = pd.DataFrame({'alpha':list(alpha),
+                                    'p':list(p),
+                                    'fity':list(fity),
+                                    'chi2':list(chi2)})
+        new_results.set_index('alpha',inplace=True)
+        self.results = pd.concat((self.results,new_results))
     
     def get_fit(self,alpha):
         """Calculate and return the fit points for a particular value of alpha"""
