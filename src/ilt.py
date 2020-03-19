@@ -138,14 +138,40 @@ class ilt(object):
         return (p, fity, chi2)
         
     def draw_fit(self,alpha):
-        pass
+        """
+            Draw the fit and the data
+        """
+        
+        # draw data
+        plt.errorbar(self.x,self.y,self.yerr,fmt='.k',zorder=0)
+        
+        # draw fit
+        fity = self.get_fit(alpha)
+        plt.plot(self.x,fity,'r',zorder=1)
+        
+        # plot elements
+        plt.xlabel('x')
+        plt.ylabel('y')
+        
     def draw_weights(self,alpha):
+        """
+        """
+        
         pass
     def draw_Lcurve(self):
+        
+        """
+        """
         pass
     def draw_Scurve(self):
+        """
+        """
+        
         pass
     def draw_Ccurve(self):
+        """
+        """
+        
         pass
     
     def draw(self,alpha_opt=None,fig=None):
@@ -319,53 +345,115 @@ class ilt(object):
                 p.append(out[0])
                 fity.append(out[1])
                 chi2.append(out[2])
-                
+            
+            new_results = pd.DataFrame({'alpha':alpha,
+                                    'p':p,
+                                    'fity':fity,
+                                    'chi2':chi2})
+        
         # do a single alpha case
         else:
             self.isiter = False
             p, fity, chi2 = self._fit_single(alpha)
+            
+            new_results = pd.DataFrame({'alpha':[alpha],
+                                    'p':[p],
+                                    'fity':[fity],
+                                    'chi2':[chi2]})
         
         # save the results
-        new_results = pd.DataFrame({'alpha':list(alpha),
-                                    'p':list(p),
-                                    'fity':list(fity),
-                                    'chi2':list(chi2)})
         new_results.set_index('alpha',inplace=True)
         self.results = pd.concat((self.results,new_results))
+        
+        # sort
+        self.results.sort_index(inplace=True)
     
     def get_fit(self,alpha):
         """Calculate and return the fit points for a particular value of alpha"""
         
         # check if alpha is in the list of calculated alphas
-        # ~ if alpha not in self.results.index:
+        if alpha not in self.results.index:
+            self.fit(alpha)
             
-        
+        # return the fit results
+        return self.results.loc[alpha,'fity']
         
     def get_weights(self,alpha):
-        """Calculate and return the distribution of weights for a particular value of alpha"""
-        pass
+        """
+            Calculate and return the distribution of weights for a particular 
+            value of alpha
+        """
+        
+        # check if alpha is in the list of calculated alphas
+        if alpha not in self.results.index:
+            self.fit(alpha)
+            
+        # return the fit results
+        return self.results.loc[alpha,'p']
     
-    def get_chi(self,alpha):
+    def get_chi2(self,alpha):
         """Calculate and return the chisquared for a particular value of alpha"""
-        pass
+        
+        # check if alpha is in the list of calculated alphas
+        if alpha not in self.results.index:
+            self.fit(alpha)
+            
+        # return the fit results
+        return self.results.loc[alpha,'chi2']
     
-    def get_rchi(self,alpha):
+    def get_rchi2(self,alpha):
         """Calculate and return the reduced chisquared for a particular value of alpha"""
-        pass
+        
+        # check if alpha is in the list of calculated alphas
+        if alpha not in self.results.index:
+            self.fit(alpha)
+            
+        # return the fit results
+        return self.results.loc[alpha,'chi2']/len(self.x)
     
     def get_Lcurve(self):
-        """"""
-        pass
+        """
+            return (chi, norm of weight vector)
+        """
+        
+        # get chi from the fit chisquared...
+        # (i.e., the Euclidean norm of the (weighted) fit residuals)
+        chi = self.results['chi2'].apply(np.sqrt)
+        
+        # calculate the norm of all the p-vectors
+        p_norm = self.results['p'].apply(norm)
+        
+        return (chi,p_norm)
     
     def get_Scurve(self):
-        """"""
-        pass
+        """return ( alpha, dln(chi)/dln(alpha) )"""
+        
+        # natural logarithm of chi
+        ln_chi = self.results['chi2'].apply(np.sqrt).apply(np.log)
+        
+        # ...and the natural logarithm of alpha
+        ln_alpha = np.log(self.results.index)
     
+        # take the gradient
+        dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
+        
+        return (self.results.index.values,dlnchi_dlnalpha)
+    
+    def get_rCcurve(self):
+        """
+            Return the reduced chi^2 for all values of alpha. 
+            
+            returns (alpha,rchi2)
+        """
+        return (self.results.index.values, self.results['chi2'].values/len(self.x))
     
     def get_Ccurve(self):
-        """"""
-        pass
-    
+        """
+            Return the chi^2 for all values of alpha. 
+            
+            returns (alpha,chi2)
+        """
+        return (self.results.index.values,self.results['chi2'].values)
     
     def read(self,filename):
         """
