@@ -31,6 +31,8 @@ class ilt(object):
         
             annot:      annotation object (blank, but shown on hover)
             axp:        L curve matplotlib axis
+            lamb:       array of transformed values corresponding to the 
+                        probabilities in the output (e.g., np.logspace(-5, 5, 500))
             line:       L curve line drawn, used for annotation shown on hover 
             figp:       L curve matplotlib figure
             fn:         function handle with signature f(x,w)
@@ -45,16 +47,17 @@ class ilt(object):
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
             yerr:       array of errors
-            z:          array of transformed values corresponding to the 
-                        probabilities in the output (e.g., np.logspace(-5, 5, 500))
+            
     """
     
-    def __init__(self,x,y=None,yerr=None,fn=None):
+    def __init__(self,x,y=None,yerr=None,fn=None,lamb=None):
         """
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
             yerr:       array of errors
             fn:         function handle with signature f(x,w)
+            lamb:       array of transformed values corresponding to the 
+                        probabilities in the output (ex: np.logspace(-5,5,500))
             
             If x is a string, read input from filename
         """    
@@ -72,6 +75,10 @@ class ilt(object):
             
             # data frame for storage
             self.results = pd.DataFrame()
+            
+            # build kernel matrix 
+            self.lamb = np.asarray(lamb)
+            self.K = np.array([self.fn(x,i) for i in lamb]).T
 
     def _annotate(self,ind):
         """
@@ -280,14 +287,12 @@ class ilt(object):
             axp.set_yscale("log")
             plt.tight_layout()
 
-    def fit(self,alpha,z,maxiter=None):
+    def fit(self,alpha,maxiter=None):
         """
             Run the non-negative least squares algorithm for a single value of 
             alpha (the regularization parameter) or an array of alphas
         
             alpha:      Tikhonov regularization parameter (may be list or number)
-            z:          array of transformed values corresponding to the 
-                        probabilities in the output (ex: np.logspace(-5,5,500))
             maxiter:    max number of iterations in solver
             
             returns: (p, fity, chi2)
@@ -298,12 +303,8 @@ class ilt(object):
         """    
         
         # Set inputs
-        self.z = np.asarray(z)
         self.maxiter = maxiter
         x = self.x
-        
-        # build kernel matrix 
-        self.K = np.array([self.fn(x,i) for i in z]).T
         
         # do list of alphas case
         if isinstance(alpha,Iterable):
@@ -336,6 +337,8 @@ class ilt(object):
         """Calculate and return the fit points for a particular value of alpha"""
         
         # check if alpha is in the list of calculated alphas
+        # ~ if alpha not in self.results.index:
+            
         
         
     def get_weights(self,alpha):
