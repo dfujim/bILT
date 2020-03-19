@@ -2,7 +2,7 @@
 # Derek Fujimoto
 # Feb 2020
 
-from ilt import *
+from bILT.src.ilt import *
 from bfit.fitting.functions import pulsed_exp 
 import bdata as bd
 import numpy as np
@@ -13,10 +13,22 @@ alpha = np.logspace(2, 8, 50)
 
 f = pulsed_exp(1.21,4)
 fn = lambda x,w: f(x,w,1) 
-I = ilt(x,y,dy,fn)
-I.fit(alpha,T1)
-I.draw()
-I.draw(4.94e4)
+I = ilt(x,y,dy,fn,T1)
+I.fit(alpha)
+
+# ~ plt.figure()
+# ~ I.draw_fit(10)
+
+# ~ plt.figure()
+# ~ I.draw_weights(10)
+
+# ~ plt.figure()
+# ~ I.draw_logdist(10)
+
+plt.figure()
+I.draw_Lcurve()
+
+
 
 
 

@@ -87,7 +87,7 @@ class ilt(object):
         x,y = self.line.get_data()
         idx = ind["ind"][0]
         self.annot.xy = (x[idx], y[idx])
-        self.annot.set_text(r'$\alpha = $%.3g' % self.alpha[idx])
+        self.annot.set_text(r'$\alpha = $%.3g' % self.results.index[idx])
         self.annot.get_bbox_patch().set_alpha(0.1)            
     
     def _hover(self,event):
@@ -150,19 +150,79 @@ class ilt(object):
         plt.plot(self.x,fity,'r',zorder=1)
         
         # plot elements
-        plt.xlabel('x')
-        plt.ylabel('y')
+        plt.xlabel('$x$')
+        plt.ylabel('$y$')
+        plt.tight_layout()
         
     def draw_weights(self,alpha):
         """
+            Draw the weights as a function of lamb
         """
         
-        pass
+        # draw the probability distribution 
+        plt.semilogx(self.lamb,self.get_weights(alpha))
+        plt.ylabel("Weight")
+        plt.xlabel("$\lambda$")
+        plt.tight_layout()
+    
+    def draw_logdist(self,alpha):
+        """
+            Draw the weights as a function of lamb, normalized for a log 
+            distribution of lambda
+        """
+        
+        # draw the probability distribution 
+        w = self.get_weights(alpha)/self.lamb
+        w /= np.sum(w)
+        plt.semilogx(self.lamb,w)
+        plt.ylabel("Probability Density")
+        plt.xlabel("$\lambda$")
+        plt.tight_layout()
+        
     def draw_Lcurve(self):
+        """
+            Draw the L curve with fancy mouse hover and highlighting
+        """
         
-        """
-        """
-        pass
+        # make figure
+        self.figp = plt.gcf()
+        axp = plt.gca()
+        self.axp = axp
+        
+        # get data 
+        chi,p_norm = self.get_Lcurve()
+        
+        
+        # draw line
+        self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
+        # ~ axp.plot(chi_min, p_norm_min, "s", zorder=2)
+        
+        # annotate the parametric plot on mouse hover
+        self.annot = axp.annotate("",
+                             xy=(0,0),
+                             xytext=(50, 20),
+                             textcoords='offset points', 
+                             ha='right', 
+                             va='bottom',
+                             bbox=dict(boxstyle='round,pad=0.1',
+                                       fc='grey', 
+                                       alpha=0.1),
+                             arrowprops=dict(arrowstyle = '->', 
+                                             connectionstyle='arc3,rad=0'),
+                             fontsize='xx-small')
+        self.annot.set_visible(False)
+        
+        # connect the hovering mechanism
+        self.figp.canvas.mpl_connect("motion_notify_event", self._hover)
+        
+        # axis labels
+        axp.set_xlabel("$|| \Sigma ( K \mathbf{p} - \mathbf{y} ) ||$")
+        axp.set_ylabel("$|| \mathbf{p} ||$")
+        
+        axp.set_xscale("log")
+        axp.set_yscale("log")
+        plt.tight_layout()
+    
     def draw_Scurve(self):
         """
         """
