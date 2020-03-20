@@ -242,6 +242,13 @@ class ilt(object):
         # draw line
         self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
         
+        # get the point of max curvature
+        alpha,curve = self.get_Lcurvature()
+        alpha_opt = alpha[np.argmax(curve)]
+        
+        # draw the point of max curvature
+        axp.plot(chi[alpha_opt],p_norm[alpha_opt],'s',zorder=2)
+        
         # annotate the parametric plot on mouse hover
         self.annot = axp.annotate("",
                              xy=(0, 0),
@@ -469,7 +476,7 @@ class ilt(object):
         
         return (res_norm,sln_norm)
     
-    def get_Lcurve_curvature(self):
+    def get_Lcurvature(self):
         """
             find the curvature of the l curve
         """
