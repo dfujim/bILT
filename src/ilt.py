@@ -147,17 +147,13 @@ class ilt(object):
                 fity:   array of final fit function points
                 chi2:   chisquared value of fit
         """
-        
-        # check if range of alphas
-        if not self.isiter:
-            alpha_opt = self.alpha
             
         # draw things for a single alpha only 
         if alpha_opt is not None:
             
             # print chi
-            print(r"$\chi^{2} = %f$" % self.get_chi2())
-            print(r"$\tilde{\chi}^{2} = %f$" % self.get_rchi2())
+            print(r"$\chi^{2} = %f$" % self.get_chi2(alpha_opt))
+            print(r"$\tilde{\chi}^{2} = %f$" % self.get_rchi2(alpha_opt))
             
             # get axes for drawing
             if fig is not None:
@@ -176,6 +172,11 @@ class ilt(object):
         
         # draw for a range of alphas
         else:     
+            
+            # get alpha
+            alpha_opt = self.results.index.values
+            if len(alpha_opt) == 0:    
+                raise RuntimeError('No values of alpha found. Fit some data first.')
             
             # make canvas
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False,
@@ -372,16 +373,25 @@ class ilt(object):
         
         # do list of alphas case
         if isinstance(alpha, Iterable):
-            self.isiter = True
             alpha = np.asarray(alpha)
             p = []
+            
+            # don't repeat alphas that are already fitted
+            alpha = np.setdiff1d(alpha,self.results.index.values)
+            
+            # easy end case
+            if len(alpha) == 0:
+                return
             
             for a in tqdm(alpha, desc="NNLS optimization @ each alpha"):
                 p.append(self._fit_single(a))
             
         # do a single alpha case
         else:
-            self.isiter = False
+            # don't repeat alphas that are already fitted
+            if alpha in self.results.index.values:
+                return
+            
             p = [self._fit_single(alpha)]            
             alpha = [alpha]
             
