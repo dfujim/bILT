@@ -38,12 +38,11 @@ class ilt(object):
             fn:         function handle with signature f(x,w)
             isiter:     if True, alpha is a list, not a number
             maxiter:    max number of iterations in solver
-            p:          array of probabilities corresponding to w, fit results
-            results:    fit results with index alpha and columns p, fity, chi2
+            results:    pd.Series fit results with index alpha and column p
                         alpha:      Tikhonov regularization parameter      
-                        fity:       fit function corresponding to K*p
-                        chi2:       chisquared value of fit
-            S:          diagonal error matrix: diag(1/yerr)
+                        p:          array of probabilities corresponding to lamb, 
+                                    fit results
+                        diagonal error matrix: diag(1/yerr)
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
             yerr:       array of errors
@@ -74,7 +73,7 @@ class ilt(object):
             self.S = np.diag(1/yerr)
             
             # data frame for storage
-            self.results = pd.DataFrame()
+            self.results = pd.Series()
             
             # build kernel matrix 
             self.lamb = np.asarray(lamb)
@@ -124,18 +123,10 @@ class ilt(object):
         else:
             p, r = nnls(L, q, self.maxiter)
     
-        # define functional output
-        fity = np.dot(self.K, p)
-
-        # calculate the fit's chisquared
-        chi2 = norm(np.matmul(self.S, (np.matmul(self.K, p)) - self.y)) ** 2
-        # calculate the fit's reduced chisquared
-        rchi2 = chi2 / len(self.x)
-        
         # calculate the generalize cross-validation (GCV) parameter tau
         # tau = np.trace(np.eye(K.shape[1]) - K ( np.matmul(K.T, K) + alpha * alpha * np.matmul(L.T, L) ) K.T )
 
-        return (p, fity, chi2)
+        return p
         
     def draw(self, alpha_opt=None, fig=None):
         """
@@ -260,7 +251,7 @@ class ilt(object):
         """
         
         # make figure
-        self.figp = plt.figure()
+        self.figp = plt.gcf()
         axp = plt.gca()
         self.axp = axp
         
@@ -384,36 +375,58 @@ class ilt(object):
             self.isiter = True
             alpha = np.asarray(alpha)
             p = []
-            fity = []
-            chi2 = []
             
             for a in tqdm(alpha, desc="NNLS optimization @ each alpha"):
-                out = self._fit_single(a)
-                p.append(out[0])
-                fity.append(out[1])
-                chi2.append(out[2])
+                p.append(self._fit_single(a))
             
-            new_results = pd.DataFrame({'alpha':alpha,
-                                        'p':p,
-                                        'fity':fity,
-                                        'chi2':chi2})
-        
         # do a single alpha case
         else:
             self.isiter = False
-            p, fity, chi2 = self._fit_single(alpha)
+            p = [self._fit_single(alpha)]            
+            alpha = [alpha]
             
-            new_results = pd.DataFrame({'alpha':[alpha],
-                                        'p':[p],
-                                        'fity':[fity],
-                                        'chi2':[chi2]})
-        
         # save the results
-        new_results.set_index('alpha', inplace=True)
-        self.results = pd.concat((self.results, new_results))
+        new_results = pd.Series(p,index=alpha,name='p')
+        new_results.index.name = 'alpha'
+        self.results = self.results.append(new_results)
         
         # sort
         self.results.sort_index(inplace=True)
+    
+    def get_chi2(self, alpha=None):
+        """
+            Calculate and return the chisquared for a particular value of alpha
+            If alpha is None, get for all values of alpha
+        """
+        
+        # function to calculate chisquared
+        chifn = lambda p : norm(np.matmul(self.S, (np.matmul(self.K, p)) - self.y)) ** 2
+        
+        # do all alphas
+        if alpha is None:
+            chi2 = self.results.apply(chifn)
+        
+        # do single alpha
+        else:
+            if alpha not in self.results.index:
+                self.fit(alpha)
+            chi2 = chifn(self.results[alpha])
+            
+        return chi2
+    
+    def get_rchi2(self, alpha=None):
+        """
+            Calculate and return the reduced chisquared for a particular value 
+            of alpha
+            
+            If alpha is None, get for all values of alpha
+        """
+        
+        # calculate chi
+        chi2 = self.get_chi2(alpha)
+            
+        # return the fit results
+        return chi2 / len(self.x)
     
     def get_fit(self, alpha):
         """Calculate and return the fit points for a particular value of alpha"""
@@ -421,10 +434,59 @@ class ilt(object):
         # check if alpha is in the list of calculated alphas
         if alpha not in self.results.index:
             self.fit(alpha)
-            
-        # return the fit results
-        return self.results.loc[alpha, 'fity']
         
+        # return the fit results
+        return np.dot(self.K, self.results[alpha])
+        
+    def get_Ccurve(self):
+        """
+            Return the chi^2 for all values of alpha. 
+            
+            returns (alpha,chi2)
+        """
+        
+        chi2 = self.get_chi2()
+        
+        return (self.results.index.values, chi2)
+    
+    def get_rCcurve(self):
+        """
+            Return the reduced chi^2 for all values of alpha. 
+            
+            returns (alpha,rchi2)
+        """
+        rchi2 = self.get_rchi2()
+        return (self.results.index.values,rchi2)
+    
+    def get_Lcurve(self):
+        """
+            return (chi, norm of weight vector)
+        """
+        
+        # get chi from the fit chisquared...
+        # (i.e., the Euclidean norm of the (weighted) fit residuals)
+        chi = np.sqrt(self.get_chi2())
+        
+        # calculate the norm of all the p-vectors
+        p_norm = self.results.apply(norm)
+        
+        return (chi, p_norm)
+    
+    def get_Scurve(self):
+        """return ( alpha, dln(chi)/dln(alpha) )"""
+        
+        # natural logarithm of chi
+        chi2 = self.get_chi2()
+        ln_chi = np.log(np.sqrt(chi2))
+        
+        # ...and the natural logarithm of alpha
+        ln_alpha = np.log(self.results.index)
+    
+        # take the gradient
+        dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
+        
+        return (self.results.index.values, dlnchi_dlnalpha)
+    
     def get_weights(self, alpha):
         """
             Calculate and return the distribution of weights for a particular 
@@ -436,71 +498,7 @@ class ilt(object):
             self.fit(alpha)
             
         # return the fit results
-        return self.results.loc[alpha, 'p']
-    
-    def get_chi2(self, alpha):
-        """Calculate and return the chisquared for a particular value of alpha"""
-        
-        # check if alpha is in the list of calculated alphas
-        if alpha not in self.results.index:
-            self.fit(alpha)
-            
-        # return the fit results
-        return self.results.loc[alpha, 'chi2']
-    
-    def get_rchi2(self, alpha):
-        """Calculate and return the reduced chisquared for a particular value of alpha"""
-        
-        # check if alpha is in the list of calculated alphas
-        if alpha not in self.results.index:
-            self.fit(alpha)
-            
-        # return the fit results
-        return self.results.loc[alpha, 'chi2'] / len(self.x)
-    
-    def get_Lcurve(self):
-        """
-            return (chi, norm of weight vector)
-        """
-        
-        # get chi from the fit chisquared...
-        # (i.e., the Euclidean norm of the (weighted) fit residuals)
-        chi = self.results['chi2'].apply(np.sqrt)
-        
-        # calculate the norm of all the p-vectors
-        p_norm = self.results['p'].apply(norm)
-        
-        return (chi, p_norm)
-    
-    def get_Scurve(self):
-        """return ( alpha, dln(chi)/dln(alpha) )"""
-        
-        # natural logarithm of chi
-        ln_chi = self.results['chi2'].apply(np.sqrt).apply(np.log)
-        
-        # ...and the natural logarithm of alpha
-        ln_alpha = np.log(self.results.index)
-    
-        # take the gradient
-        dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
-        
-        return (self.results.index.values, dlnchi_dlnalpha)
-    
-    def get_rCcurve(self):
-        """
-            Return the reduced chi^2 for all values of alpha. 
-            
-            returns (alpha,rchi2)
-        """
-        return (self.results.index.values, self.results['chi2'].values / len(self.x))
-    
-    def get_Ccurve(self):
-        """
-            Return the chi^2 for all values of alpha. 
-            
-            returns (alpha,chi2)
-        """
-        return (self.results.index.values, self.results['chi2'].values)
+        return self.results[alpha]
     
     def read(self,filename):
         """
@@ -511,17 +509,18 @@ class ilt(object):
         
         # read file
         with open(filename, 'r') as fid:
-            self.__dict__ = yaml.safe_load(fid.read())
+            file_contents = yaml.safe_load(fid.read())
             
         # make arrays
-        for key in ('x', 'y', 'yerr', 'z', 'p', 'K' ):
-            self.__dict__[key] = np.array(self.__dict__[key])
+        for key in ('x', 'y', 'yerr', 'lamb', 'K' ):
+            self.__dict__[key] = np.array(file_contents[key])
             
-        if self.isiter:
-            for key in ('alpha', 'chi2'):
-                self.__dict__[key] = np.array(self.__dict__[key])
-        
-        # assign some of the missing parts
+        # set results
+        self.results = pd.Series(file_contents['p'], index=file_contents['alpha'],
+                                 name='p')
+        self.results.index.name = 'alpha'
+            
+        # assign error matrix
         self.S = np.diag(1 / self.yerr)
         
     def write(self,filename,**notes):
@@ -536,16 +535,16 @@ class ilt(object):
         output = {**self.__dict__,**notes}
         
         # remove the useless attributes, or those too large to be useful
-        for key in ('fn', 'S', 'fity'):
+        for key in ('fn', 'S','results'):
             del output[key]
             
+        # add results 
+        output['p'] = self.results.apply(np.ndarray.tolist).tolist()
+        output['alpha'] = self.results.index.tolist()
+            
         # make numpy arrays lists
-        for key in ('x', 'y', 'yerr', 'z', 'p', 'K'):
+        for key in ('x', 'y', 'yerr', 'lamb', 'K'):
             output[key] = output[key].tolist()
-        
-        if self.isiter:
-            for key in ('alpha', 'chi2'):
-                output[key] = output[key].tolist()
         
         # write to file 
         print("writing...", end=' ', flush=True)
