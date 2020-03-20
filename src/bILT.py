@@ -5,8 +5,11 @@ import yaml
 
 import bdata as bd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
+from functools import partial
+from collections.abc import Iterable
 from bfit.fitting.functions import pulsed_exp
 from bILT.src.ilt import ilt
 
@@ -24,12 +27,16 @@ class bILT(ilt):
         
     """
     
-    def __init__(self,run,year=-1,rebin=1,probe='Li8'):
+    def __init__(self, run, year=-1, rebin=1, probe='Li8', T1=1000, nproc=1):
         """
             run:        run number
             year:       year 
             rebin:      rebinning in asymmetry calculation
             probe:      probe lifetime to use in exp calculation
+            T1:         if int: number of T1 values in array within 0.01*tau and
+                        100*tau
+                        else:   user-specified T1 array
+            nproc:      number of processsors to use
             
             if run is a filename, read from that file
         """
@@ -43,72 +50,42 @@ class bILT(ilt):
             self.year = year
             self.rebin = rebin
             self.probe = probe
+            self.results = pd.Series()
+            self.nproc = nproc
             
+            # set weights
+            self.lamb = T1
+            
+            if not isinstance(T1, Iterable):    
+                
+                # determine the upper/lower T1 limits based on the probe lifetime
+                lifetime = bd.life[self.probe]
+                log10_T1_min = np.log10(lifetime * 1e-2)
+                log10_T1_max = np.log10(lifetime * 1e2)
+                
+                # generate the T1 range
+                self.lamb = np.logspace(log10_T1_min, log10_T1_max, T1, base=10.0)
+            
+            # setup communal with read
             self._setup()
-    
+            
     def _setup(self):
         
         # get data
-        dat = bd.bdata(self.run,self.year)
-        self.x,self.y,self.yerr = dat.asym('c',rebin=self.rebin)
+        dat = bd.bdata(self.run, self.year)
+        self.x,self.y,self.yerr = dat.asym('c', rebin=self.rebin)
         
         # get function 
-        f = pulsed_exp(lifetime=bd.life[self.probe],pulse_len=dat.get_pulse_s())
+        f = pulsed_exp(lifetime=bd.life[self.probe], pulse_len=dat.get_pulse_s())
         self.fn = lambda x,w: f(x,w,1) 
                 
         # build error matrix
         self.S = np.diag(1/self.yerr) 
         
-    def draw_pnorm(self,alpha_opt):
-        """
-            Draw the normalized probabilty distribution, assyming a logarithmic
-            distribution of T1. 
-            
-            alpha_opt:  optimal alpha to use in ILT procedure
-        """
-        if not self.isiter:
-            alpha_opt = self.alpha
-        
-        p, fity, chi2 = self._fit_single(alpha_opt)
-        p /= self.z
-        plt.semilogx(self.z,p/sum(p))
-        plt.ylabel('Probability Density')
-        plt.xlabel(r'$\lambda$')
-        plt.tight_layout()
-    
-    def fit(self,alpha,n=1000,T1=None,maxiter=None):
-        """
-            Run the non-negative least squares algorithm for a single value of 
-            alpha, the regularization parameter
-        
-            alpha:      Tikhonov regularization parameter (may be list or number)
-                        Try somewhere between 1e2 and 1e8
-            n:          number of T1 values in array within 0.01*tau and40214 100*tau
-                        (ignored if T1 is not none)
-            T1:         user-specified T1 array
-            maxiter:    max number of iterations in solver
-            
-            returns
-                same as ilt.fit
-        """
-        
-        # set weights
-        self.n = n
-        self.T1 = T1
-        
-        if T1 is None:    
-            # determine the upper/lower T1 limits based on the probe lifetime
-            lifetime = bd.life[self.probe]
-            log10_T1_min = np.log10(lifetime * 1e-2)
-            log10_T1_max = np.log10(lifetime * 1e2)
-            
-            # generate the T1 range
-            T1 = np.logspace(log10_T1_min, log10_T1_max, n, base=10.0)
-        
-        # run
-        return super().fit(alpha,T1,maxiter)
+        # set the kernel
+        self.K = np.array([self.fn(self.x, i) for i in self.lamb]).T
 
-    def read(self,filename):
+    def read(self, filename):
         """
             Read yaml file and set properties
             
@@ -117,33 +94,25 @@ class bILT(ilt):
         
         # read file
         with open(filename,'r') as fid:
-            self.__dict__ = yaml.safe_load(fid.read())
+            file_contents = yaml.safe_load(fid.read())
+            
+        # set results
+        results = pd.Series(file_contents['p'],index=file_contents['alpha'],
+                                 name='p')    
+        results.index.name = 'alpha'
+        del file_contents['p']
+        del file_contents['alpha']
+    
+        self.__dict__ = {**file_contents,'results':results}
         self._setup()
             
         # make arrays
-        for key in ('p',):
-            self.__dict__[key] = np.array(self.__dict__[key])
-            
-        if self.T1 is not None:
-            self.__dict__['T1'] = np.array(self.__dict__['T1'])
-            self.z = self.T1
-        else:
-            # determine the upper/lower T1 limits based on the probe lifetime
-            lifetime = bd.life[self.probe]
-            log10_T1_min = np.log10(lifetime * 1e-2)
-            log10_T1_max = np.log10(lifetime * 1e2)
-            
-            # generate the T1 range
-            self.z = np.logspace(log10_T1_min, log10_T1_max, self.n, base=10.0)
-            
-        if self.isiter:
-            for key in ('alpha','chi'):
-                self.__dict__[key] = np.array(self.__dict__[key])
-        
-        # assign some of the missing parts
-        self.K = np.array([self.fn(self.x,i) for i in self.z]).T
+        self.lamb = np.array(self.lamb)
     
-    def write(self,filename,**notes):
+        # assign error matrix
+        self.S = np.diag(1 / self.yerr)
+        
+    def write(self, filename, **notes):
         """
             Write to yaml file
             
@@ -152,28 +121,21 @@ class bILT(ilt):
         """
         
         # read attributes
-        dat = bd.bdata(self.run,self.year)
-        output = {key:self.__dict__[key] for key in ('run','year','rebin','n',
-                                                     'alpha','isiter','maxiter',
-                                                     'p','T1','chi','probe')}
-        output = {'title':dat.title,**output,**notes}
+        dat = bd.bdata(self.run, self.year)
+        output = {key:self.__dict__[key] for key in ('run','year','rebin',
+                                                     'maxiter','lamb','probe')}
+        output = {'title':dat.title, **output, **notes}
         
         # make numpy arrays lists
-        for key in ('p',):
-            output[key] = output[key].tolist()
-        
-        if self.isiter:
-            for key in ('alpha','chi'):
-                output[key] = output[key].tolist()
-        
-        if self.T1 is not None:
-            output['T1'] = output['T1'].tolist()
-        
+        output['p'] = self.results.apply(np.ndarray.tolist).tolist()
+        output['alpha'] = self.results.index.tolist()
+        output['lamb'] = output['lamb'].tolist()
+            
         # write to file 
-        print("writing...",end=' ',flush=True)
-        with open(filename,'w') as fid:
+        print("writing...", end=' ', flush=True)
+        with open(filename, 'w') as fid:
             fid.write(yaml.safe_dump(output))
-        print("done",flush=True)
+        print("done", flush=True)
             
 
 
