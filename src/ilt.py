@@ -73,6 +73,7 @@ class ilt(object):
             self.y = np.asarray(y)
             self.yerr = np.asarray(yerr)
             self.fn = fn
+            self.nproc = nproc
             
             # build error matrix
             self.S = np.diag(1/yerr)
@@ -460,14 +461,37 @@ class ilt(object):
             return (chi, norm of weight vector)
         """
         
-        # get chi from the fit chisquared...
-        # (i.e., the Euclidean norm of the (weighted) fit residuals)
-        chi = np.sqrt(self.get_chi2())
+        # residual norm: fit chi2 square-rooted
+        res_norm = np.sqrt(self.get_chi2())
         
-        # calculate the norm of all the p-vectors
-        p_norm = self.results.apply(norm)
+        # solution norm
+        sln_norm = self.results.apply(norm)
         
-        return (chi, p_norm)
+        return (res_norm,sln_norm)
+    
+    def get_Lcurve_curvature(self):
+        """
+            find the curvature of the l curve
+        """
+        
+        # get the Lcurve
+        x, y = self.get_Lcurve()
+        alpha = self.results.index.values
+        
+        # take the log
+        x = np.log(x)
+        y = np.log(y)
+        
+        # take second gradient with respect to alpha
+        y1 = np.gradient(y, alpha)
+        y11 = np.gradient(y1, alpha)
+        x1 = np.gradient(x, alpha)
+        x11 = np.gradient(x1, alpha)
+        
+        # curvature
+        curvature = (x1*y11 - x11*y1) / (x1**2 + y1**2)**1.5
+        
+        return (alpha,curvature)
     
     def get_Scurve(self):
         """return ( alpha, dln(chi)/dln(alpha) )"""
@@ -520,7 +544,7 @@ class ilt(object):
         # assign error matrix
         self.S = np.diag(1 / self.yerr)
         
-    def write(self,filename,**notes):
+    def write(self, filename, **notes):
         """
             Write to yaml file
             
