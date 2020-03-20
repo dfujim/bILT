@@ -15,10 +15,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from functools import partial
 from collections.abc import Iterable
 from scipy.optimize import nnls
 from scipy.linalg import norm
 from tqdm import tqdm
+from multiprocessing import Pool
 
 # =========================================================================== #
 class ilt(object):
@@ -36,12 +38,14 @@ class ilt(object):
             line:       L curve line drawn, used for annotation shown on hover 
             figp:       L curve matplotlib figure
             fn:         function handle with signature f(x,w)
-            isiter:     if True, alpha is a list, not a number
+            K:          Kernel matrix: 2D array
             maxiter:    max number of iterations in solver
-            results:    pd.Series fit results with index alpha and column p
+            nproc:      number of processors to use
+            results:    pd.Series fit results with index alpha and values p
                         alpha:      Tikhonov regularization parameter      
                         p:          array of probabilities corresponding to lamb, 
                                     fit results
+            S:          diagonal matrix of 1/yerr
                         diagonal error matrix: diag(1/yerr)
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
@@ -49,7 +53,7 @@ class ilt(object):
             
     """
     
-    def __init__(self,x,y=None,yerr=None,fn=None,lamb=None):
+    def __init__(self, x, y=None, yerr=None, fn=None, lamb=None, nproc=1):
         """
             x:          array of time steps in data to fit
             y:          array of data points f(t) needing to fit
@@ -57,6 +61,7 @@ class ilt(object):
             fn:         function handle with signature f(x,w)
             lamb:       array of transformed values corresponding to the 
                         probabilities in the output (ex: np.logspace(-5,5,500))
+            nproc:      number of processors to use
             
             If x is a string, read input from filename
         """    
@@ -77,7 +82,7 @@ class ilt(object):
             
             # build kernel matrix 
             self.lamb = np.asarray(lamb)
-            self.K = np.array([self.fn(x,i) for i in lamb]).T
+            self.K = np.array([self.fn(x, i) for i in lamb]).T
 
     def _annotate(self,ind):
         """
@@ -102,44 +107,18 @@ class ilt(object):
                     self.annot.set_visible(False)
                     self.figp.canvas.draw_idle()
         
-    def _fit_single(self,alpha):
-        """
-            Run the non-negative least squares algorithm for a single value of 
-            alpha, the regularization parameter
-        """    
-        
-        # weighted variables for solving q = Lp
-        L = np.matmul(self.S, self.K)
-        q = np.matmul(self.S, self.y)
-        
-        # concatenate regularization
-        # https://stackoverflow.com/a/35423745
-        L = np.concatenate([L, np.sqrt(alpha) * np.eye(self.K.shape[1])])
-        q = np.concatenate((q, np.zeros(self.K.shape[1])))
-
-        # solve
-        if self.maxiter is None:
-            p, r = nnls(L, q)
-        else:
-            p, r = nnls(L, q, self.maxiter)
-    
-        # calculate the generalize cross-validation (GCV) parameter tau
-        # tau = np.trace(np.eye(K.shape[1]) - K ( np.matmul(K.T, K) + alpha * alpha * np.matmul(L.T, L) ) K.T )
-
-        return p
-        
-    def draw(self, alpha_opt=None, fig=None):
+    def draw(self, alpha=None, fig=None):
         """
             Draw fit or range of fits. 
             
-            alpha_opt:  if None draw:
+            alpha:  if None draw:
                             alpha v chi
                             alpha v dchi/dalpha
                             L-curve
                         else draw:
                             data & fit
                             distribution 
-            fig:    optional figure handle for redrawing when alpha_opt != None
+            fig:    optional figure handle for redrawing when alpha != None
             
             returns: (p, fity, chi2)
             
@@ -149,11 +128,11 @@ class ilt(object):
         """
             
         # draw things for a single alpha only 
-        if alpha_opt is not None:
+        if alpha is not None:
             
             # print chi
-            print(r"$\chi^{2} = %f$" % self.get_chi2(alpha_opt))
-            print(r"$\tilde{\chi}^{2} = %f$" % self.get_rchi2(alpha_opt))
+            print(r"$\chi^{2} = %f$" % self.get_chi2(alpha))
+            print(r"$\tilde{\chi}^{2} = %f$" % self.get_rchi2(alpha))
             
             # get axes for drawing
             if fig is not None:
@@ -165,17 +144,17 @@ class ilt(object):
                 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
             
             # draw the fit on the data
-            self.draw_fit(alpha_opt, ax=ax1)
+            self.draw_fit(alpha, ax=ax1)
             
             # draw the probability distribution 
-            self.draw_weights(alpha_opt, ax=ax2)
+            self.draw_weights(alpha, ax=ax2)
         
         # draw for a range of alphas
         else:     
             
             # get alpha
-            alpha_opt = self.results.index.values
-            if len(alpha_opt) == 0:    
+            alpha = self.results.index.values
+            if len(alpha) == 0:    
                 raise RuntimeError('No values of alpha found. Fit some data first.')
             
             # make canvas
@@ -288,7 +267,7 @@ class ilt(object):
         axp.set_yscale("log")
         plt.tight_layout()
     
-    def draw_Scurve(self,threshold=-1, ax=None):
+    def draw_Scurve(self, threshold=-1, ax=None):
         """
             Draw alpha vs gradient of logs
             
@@ -359,12 +338,6 @@ class ilt(object):
         
             alpha:      Tikhonov regularization parameter (may be list or number)
             maxiter:    max number of iterations in solver
-            
-            returns: (p, fity, chi2)
-        
-                p:      array of unnormalized weights
-                fity:   array of final fit function points
-                chi2:   chisquared value of fit
         """    
         
         # Set inputs
@@ -374,17 +347,31 @@ class ilt(object):
         # do list of alphas case
         if isinstance(alpha, Iterable):
             alpha = np.asarray(alpha)
-            p = []
             
             # don't repeat alphas that are already fitted
-            alpha = np.setdiff1d(alpha,self.results.index.values)
+            alpha = np.setdiff1d(alpha, self.results.index.values)
             
             # easy end case
             if len(alpha) == 0:
                 return
             
-            for a in tqdm(alpha, desc="NNLS optimization @ each alpha"):
-                p.append(self._fit_single(a))
+            # set up computation
+            iterable = tqdm(alpha, 
+                            desc="NNLS optimization @ each alpha",
+                            total=len(alpha))
+            
+            # function to apply
+            fn = partial(_fit_single, y=self.y, K=self.K, S=self.S, maxiter=maxiter)
+            
+            # serial processing
+            if self.nproc <= 1:
+                p = list(map(fn, iterable))
+            else:
+                pl = Pool(self.nproc)
+                try:
+                    p = list(pl.map(fn, iterable))
+                finally:
+                    pl.close()
             
         # do a single alpha case
         else:
@@ -392,11 +379,11 @@ class ilt(object):
             if alpha in self.results.index.values:
                 return
             
-            p = [self._fit_single(alpha)]            
+            p = [_fit_single(alpha, self.y, self.K, self.S, maxiter)]            
             alpha = [alpha]
             
         # save the results
-        new_results = pd.Series(p,index=alpha,name='p')
+        new_results = pd.Series(p, index=alpha,  name='p')
         new_results.index.name = 'alpha'
         self.results = self.results.append(new_results)
         
@@ -561,4 +548,34 @@ class ilt(object):
         with open(filename, 'w') as fid:
             fid.write(yaml.safe_dump(output))
         print("done", flush=True)
-            
+
+# Fit a fingle function             
+def _fit_single(alpha, y, K, S, maxiter):
+    """
+        Run the non-negative least squares algorithm for a single value of 
+        alpha, the regularization parameter
+        
+        K:          kernel matrix
+        S:          diagonal matrix of 1/yerr
+        y:          data measurements
+        maxiter:    maximum number of iterations in nnls
+        
+    """    
+    
+    # weighted variables for solving q = Lp
+    L = np.matmul(S, K)
+    q = np.matmul(S, y)
+    
+    # concatenate regularization
+    # https://stackoverflow.com/a/35423745
+    L = np.concatenate([L, np.sqrt(alpha) * np.eye(K.shape[1])])
+    q = np.concatenate((q, np.zeros(K.shape[1])))
+
+    # solve
+    if maxiter is None: p, r = nnls(L, q)
+    else:               p, r = nnls(L, q, maxiter)
+
+    # calculate the generalize cross-validation (GCV) parameter tau
+    # tau = np.trace(np.eye(K.shape[1]) - K ( np.matmul(K.T, K) + alpha * alpha * np.matmul(L.T, L) ) K.T )
+
+    return p
