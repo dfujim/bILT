@@ -134,3 +134,6 @@ dmypy.json
 *.xml
 *.swp
 
+# data files 
+*.csv
+*.yaml

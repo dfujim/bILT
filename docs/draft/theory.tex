@@ -14,16 +14,13 @@ The quantity of real interest is $P(t)$, whose temporal behaviour is connected w
 In order to introduce the \gls{bnmr} probes in a host material of interest, they are ion-implanted using a \gls{dc} beam for a finite period of time $\Delta$, typically on the order of few seconds.
 On arrival, each \gls{bnmr} probe interacts with electromagnetic fields inside the host and relaxes (\latin{i.e.}, re-orients);
 however, not all probes arrive at the same time, which must be accounted for.
-Fortunately, this convolution with the beam can be solved analytically.
 For probes arriving at time $t^{\prime}$ during a beam pulse of duration $\Delta$ and decaying at a later time $t$, the time dependence of $P(t)$ can be written as~\cite{2006-Salman-PRL-96-147601, 2015-MacFarlane-PRB-92-064409}
 %
 \begin{equation} \label{eq:polarization}
 P(t) = P_0 \frac{ \displaystyle \int_{0}^{\xi} \exp \left [ -\left (\xi - t^{\prime} \right ) / \tau_{\beta} \right ] \, R \left (t,t^{\prime} \right ) \, \mathrm{d}t^{\prime} }{ \displaystyle \int_{0}^{\xi} \exp \left [ -t^{\prime} / \tau_{\beta} \right ] \, \mathrm{d}t^{\prime} },
 \end{equation}
 %
-where the integration limit $\xi = t$ if $t \leq \Delta$ and $\xi = \Delta$ otherwise,
-$P_{0}$ is the degree of polarization at $t = 0$ (determined by the optical pumping of \ch{^{8}Li} prior to implantation),
-and $R \left (t, t^{\prime} \right )$ is the relaxation function.
+where $\xi = t$ if $t \leq \Delta$ and $\xi = \Delta$ otherwise, $P_{0}$ is the degree of polarization at $t = 0$, and $R \left (t, t^{\prime} \right )$ is the relaxation function.
 
 The simplest form for $R \left (t, t^{\prime} \right )$ is a single decaying exponential: 
 %
@@ -31,18 +28,17 @@ The simplest form for $R \left (t, t^{\prime} \right )$ is a single decaying exp
    R \left (t, t^{\prime} \right ) = \exp \left [-  \lambda \left ( t - t^{\prime} \right ) \right ],
 \end{equation}
 %
-where $\lambda \equiv 1 / T_{1}$ is the \gls{slr} rate. Quite generally, however, $R \left (t, t^{\prime} \right )$ can be written as a distribution of decaying exponentials, with the distribution of the \gls{slr} rates described by some $p(\lambda)$.
+where $\lambda \equiv 1 / T_{1}$ is the \gls{slr} rate. Quite generally, however, $R \left (t, t^{\prime} \right )$ can be written as a superposition of decaying exponentials, according to a distribution $p(\lambda)$ of the \gls{slr} rates.
 This is quite analogous to \Cref{eq:signal-integral}.
-In practice, spectra are often well-described (at the level of phenomenology) by a stretched exponential or \gls{kww} function~\cite{1854-Kohlrausch-AP-167-179, 1970-Williams-TFS-66-80, 1980-Lindsay-JCP-73-3348, 2006-Johnston-PRB-74-184430, 2016-Wu-SR-6-20506}.
-In this case \Cref{eq:slr-integral} becomes:
+In practice, spectra are often well-described (at the level of phenomenology) by a stretched exponential:
 %
 \begin{equation} \label{eq:slr-stretched}
    R_\mathrm{KWW} \left ( t, t^{\prime} \right ) = \exp \left \{ - \left  [ \lambda \left ( t-t^{\prime} \right ) \right ]^{\beta} \right \},
 \end{equation}
 %
 where $0 < \beta \leq 1$ is the stretching exponent.
-This form of $R \left ( t, t^{\prime} \right )$ can arise when the \gls{kww} distribution is chosen for $p ( \lambda ) $~\cite{2006-Johnston-PRB-74-184430}.
-The special cases of $\beta = 1/2$~\cite{1968-Tse-PRL-21-511, 1984-Stockmann-JNCS-66-501} or $\beta = 1/3$~\cite{1992-Bader-JPCM-4-4779} originate from \gls{slr} that is inhomogenously averaged in \gls{3d} or \gls{2d} limits.
+This form of $R \left ( t, t^{\prime} \right )$ can arise when $\lambda$ is distributed according to the \gls{kww} distribution~\cite{1854-Kohlrausch-AP-167-179, 1970-Williams-TFS-66-80, 1980-Lindsay-JCP-73-3348, 2006-Johnston-PRB-74-184430, 2016-Wu-SR-6-20506, 2006-Johnston-PRB-74-184430}.
+The special cases of $\beta = 1/2$~\cite{1968-Tse-PRL-21-511, 1984-Stockmann-JNCS-66-501} and $\beta = 1/3$~\cite{1992-Bader-JPCM-4-4779} originate from \gls{slr} that is inhomogenously averaged in the \gls{3d} and \gls{2d} limits respectively.
 The approach is often used in conventional solid-state \gls{nmr}~\cite{1995-Narayanan-JMRSA-112-58}, though chiefly as an expedient simplification of the multi-exponential magnetization transients, particularly when quadrupolar interactions are present~\cite{1995-McDowell-JMRSA-113-242}.
 %In disordered or glassy materials like polymers a distribution of relaxation times is expected and a stretched exponential works works well~\cite{2014-McKenzie-JACS-136-7833, 2014-McGee-JPCS-551-012039, 2015-McKenzie-SM-11-1755, 2017-McKenzie-JCP-146-244903, 2018-McKenzie-SM-14-7324, 2019-Fujimoto-CM-31-9346}.
 %While it may not be \latin{a priori} obvious why a relaxation transient appears stretched, the function has the following advantages as a phenomenological model:
@@ -50,17 +46,15 @@ The approach is often used in conventional solid-state \gls{nmr}~\cite{1995-Nara
 %and 2) it contains relatively few degrees of freedom (\latin{i.e.}, less than a biexponential model).
 
 While the \gls{kww} distribution is successful at describing a great deal of relaxation phenomena, it is hardly the simplest distribution to work with.
-In fact, it may be a little \emph{too} successful;
+In fact, it may be a little \emph{too} successful:
 the high degree of correlation between $\lambda$ and $\beta$ allows \Cref{eq:slr-stretched} to do a good job in fitting relaxation spectra whose underlying $p ( \lambda )$ may be much simpler (\latin{e.g.}, a biexponential).
-This ease of use may disguise the proper relaxation function and lead to an incorrect interpretation of the relaxation mechanism.
-\textbf{More here?}
-
+This ease of use may disguise the proper relaxation function and lead to an incorrect interpretation of the relaxation mechanism. It is clear that a method is needed to identify the nature of the \gls{slr}, and solve for the underlying distribution of relaxation functions.
 
 % ILT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Transform}
+\subsection{Solving for the Distribution}
 
-We now describe how the \gls{ilt} may be used to determine $p ( \lambda )$, revealing the underlying distribution of exponentials.
-To start, we discretize $t$ and $\lambda$ such that \Cref{eq:slr-integral} may instead be written as
+We now describe how the \gls{ilt} method may be used to determine $p ( \lambda )$, revealing the underlying distribution of exponentials.
+To start, we discretize $t$ and $\lambda$, choosing \Cref{eq:slr-integral} as the fundamental relaxation function, out of which we will construct superpositions:
 %\begin{equation}
 %\label{eq:signal-discrete}
 %y ( t_{i} ) = \sum_{j} P( \lambda_{j} ) \exp ( - \lambda_{j} t_{i}) ,
@@ -70,29 +64,20 @@ To start, we discretize $t$ and $\lambda$ such that \Cref{eq:slr-integral} may i
    R \left (t_{i}, t^{\prime};\lambda_j \right ) = \exp \left [- \lambda_{j} \left ( t_{i} - t^{\prime} \right ) \right ] .
 \end{equation}
 %
-With this transformation, we conveniently write $A(t)$ in matrix form:
+The asymmetry $A(t)$ may be written in matrix form,
 %
 \begin{equation} \label{eq:signal-matrix}
    \mathbf{A} = K \mathbf{p},
 \end{equation}
 %
-where $\mathbf{p}$ is the vector containing the associated amplitudes, and $K$ is the kernel matrix:
+where $\mathbf{p}$ is a vector weighting each of the $R \left (t_{i}, t^{\prime};\lambda_j \right )$, and $K$ is the kernel matrix composed of these functions:
 %
 \begin{equation}
    \label{eq:kernel}
-   [K]_{ij} = A_{0} P(t_i;\lambda_j),
-   %\exp \left ( - \lambda_{j} t_{i} \right )
+   [K]_{ij} = A_{0} P(t_i;\lambda_j).
 \end{equation}
 %
-where $P(t_i;\lambda_j)$ is found by plugging \Cref{eq:slr-discrete} into \Cref{eq:polarization}.
-%Of course, this can be easily re-cast as a vector of probability densities:
-%\textbf{if the $\lambda_j$ are not evenly spaced, then this is not necessarily true. It may be better to instead leave this more vague and say it is easily cast to a normalized vector, without saying how.}
-%
-%\begin{equation}
-%   \tilde{\mathbf{p}} = \frac{ \mathbf{p} }{ \sum_{i} [p]_{i} } .
-%\end{equation}
-%3
-To solve the discretized problem, the goal is to
+The solution of \Cref{eq:signal-matrix} satisfies
 %
 \begin{equation}
    \label{eq:onnls}
@@ -102,9 +87,8 @@ To solve the discretized problem, the goal is to
 where $\Sigma$ is a diagonal matrix of the reciprocal uncertainties, and $\mathbf{y}$ is the measured asymmetry. 
 
 While easily identified as a simple weighted least-squares problem, the number of degrees of freedom present in $\mathbf{p}$ make the problem ill-defined: with only a small amount of random error in $\mathbf{y}$, the matrix inversion is unstable, and many choices of $\mathbf{p}$ provide good candidates for the minimization of \Cref{eq:onnls}. 
-
 \emph{Regularization} is often introduced to increase the stability of the inversion.
-This is done through the addition of a penalty term with a scale factor $\alpha$.
+This can done through the addition of a penalty term with a scale factor $\alpha$.
 With this modification, \Cref{eq:onnls} becomes
 %
 \begin{equation}
@@ -114,46 +98,46 @@ With this modification, \Cref{eq:onnls} becomes
 %
 \Cref{eq:rnnls} is commonly known as Tikhonov regularization~\cite{1995-Tikhonov-NMSIPP} or ridge regression.
 Effectively, the added term $\alpha^2 || \mathbf{p}_\alpha ||^{2}$ seeks to prevent the coefficients in $\mathbf{p}_\alpha$ from adopting large values without incurring a penalty.
-Pragmatically, this has the effect that, when $\alpha = 0$, $\mathbf{p}$ is most likely to contain elements that are either very large or 0 (\latin{i.e.}, giving a ``spiky'' solution resembling a collection of delta functions).
+Pragmatically, this has the effect that, when $\alpha = 0$, $\mathbf{p}$ is likely to contain elements that are either very large or zero, such that the solution resembles a collection of delta functions.
 Conversely, when $\alpha = \infty$, it forces the elements of $\mathbf{p}$ to zero, as $\alpha^2 || \mathbf{p}_\alpha ||^{2}$ is the dominant contribution to \Cref{eq:rnnls}.
-As $\alpha$ grows, it tends to broaden the peaks present in $\mathbf{p}_\alpha(\lambda)$, smoothing the distribution. Therefore, the solution depends greatly on the choice of $\alpha$, which is not known \latin{a priori} and must be determined for meaningful results. For $0 \leq \alpha$, there will exist an ``optimum'' regularization parameter which will balance the degree of error introduced by the smoothing of $\mathbf{p}_\alpha(\lambda)$, with the scatter present in $\mathbf{y}$. Once an optimal value of $\alpha$ has been chosen, \Cref{eq:rnnls} can be solved straightforwardly using \gls{nnls} optimization~\cite{1995-Lawson-SLSP}.
+As $\alpha$ grows, it tends to broaden the peaks present in $\mathbf{p}_\alpha(\lambda)$, smoothing the distribution. Therefore, the solution depends greatly on the choice of $\alpha$, which is not known \latin{a priori} and must be determined for a meaningful result. An ``optimum'' regularization parameter $0 \leq \alpha_\mathrm{opt}$ exists which balances the degree of error introduced by the smoothing of $\mathbf{p}_\alpha(\lambda)$, with the scatter present in $\mathbf{y}$. Once an optimal value of $\alpha$ has been chosen, \Cref{eq:rnnls} can be solved straightforwardly using a \gls{nnls} optimization~\cite{1995-Lawson-SLSP}.
 
 % ALPHA OPT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Optimized Regularization}
+\subsection{Optimizing Regularization}
 
-There are many approaches to find the ``optimal'' $\alpha$~\cite{2001-Kilmer-SIAMJMAA-22-1204, 2011-Bauer-MCS-81-1795}. In this section we explain in detail three of the most common, notably neglecting the so-called Butler-Reeds-Dawson~\cite{1981-Butler-SIAMJNMA-18-381} and the ``the discrepancy principle''~\cite{1966-Morozon-DANSSR-167-510} methods which rely on an estimation of the error in the data. 
+There are many approaches to find $\alpha_\mathrm{opt}$~\cite{2001-Kilmer-SIAMJMAA-22-1204, 2011-Bauer-MCS-81-1795}. In this section we briefly highlight three of the most common, neglecting the Butler-Reeds-Dawson~\cite{1981-Butler-SIAMJNMA-18-381} and the ``the discrepancy principle''~\cite{1966-Morozon-DANSSR-167-510}. These methods rely on an estimation of the global random error in the data, a task made extraordinarily difficult the intrinsically inhomogeneous statistical errors of \gls{bnmr} \gls{slr}.
 \textbf{Is this the same as the ``the discrepancy principle''~\cite{1966-Morozon-DANSSR-167-510}?}
 \textbf{It is possible this approach may work? See Eqs.~(7.9)--(7.10) on pp.~180--181 in~\cite{1998-Hansen-RDDIPP}.}
 \textcolor{red}{BRD seems to be the same as DP.. but I'm a little unclear. The approach in \onlinecite{1998-Hansen-RDDIPP} seems to be the save as GCV.}
-These do not apply to our case because our statistical errors are intrinsically inhomogeneous with time. This is in contrast to, for example, an inversion-recovery \gls{nmr} experiment, where the level of noise can be determined, in principle, by turning off the RF amplifier. Because of this, we will limit the discussion to methods independent of an \latin{a priori} estimation of the error: the ``S-curve'' method, the ``L-curve'' method, and \gls{gcv}. In general, the goal of all three is to find the largest value of $\alpha$, thereby producing the most smoothing, while maintaining a high fitting quality. 
+This is in contrast to, for example, an inversion-recovery \gls{nmr} experiment, where the level of noise can be determined, in principle, by turning off the RF amplifier. Because of this, we will limit the discussion to methods independent of an \latin{a priori} estimation of the error: the ``S-curve'' method, the ``L-curve'' method, and \gls{gcv}. In general, the goal of all three can be simplified as finding the largest value of $\alpha$, thereby producing the most smoothing, while maintaining a high fitting quality. 
 
-The S-curve method is perhaps the simplest and most intuitive of the three. We first define the residual norm as
+The S-curve method is perhaps the simplest and most intuitive of the three. Define the residual norm as
 %
 \begin{equation} \label{eq:chi}
-   \chi(\alpha) = || \Sigma \left ( K \mathbf{p}_\alpha - \mathbf{y} \right ) ||_2,
+   \chi(\alpha) = || \Sigma \left ( K \mathbf{p}_\alpha - \mathbf{y} \right ) ||_2.
 \end{equation}
 %
-and plot against $\alpha$. Generally, $\chi$ is relatively insensitive to small values of $\alpha$. Maintaining a small $\chi$ can be accomplished by choosing the minimum $\alpha$ which satisfies
+Generally, $\chi$ is relatively insensitive to small values of $\alpha$; therefore, a good choice of $\alpha$ may be when $\chi$ starts to increase rapidly. Choosing some tolerance beforehand, a small $\chi$ can be maintained by choosing the minimum $\alpha$ which satisfies
 %
 \begin{equation}\label{eq:L-opt}
 \frac{\mathrm{d}\log\chi}{\mathrm{d}\log\alpha}\Bigg|_{\alpha_\mathrm{min}} > \mathrm{tol},
 \end{equation}
 %
-where $0<\mathrm{tol}<1$~\cite{Zou2016}. A reasonable choice of the tolerance is $0.1$.
+where $0<\mathrm{tol}<1$~\cite{Zou2016}. A reasonable choice of the tolerance for \gls{bnmr} is \num{\sim0.1}.
 
-The L-curve analysis aims to find a balance between the solution norm ($\eta(\alpha) = || \mathbf{p}_\alpha ||_2$) and the residual norm (\Cref{eq:chi}). This balance, and therefore $\alpha_\mathrm{opt}$, is found in the ``corner'' of the L-curve. Numerically, one can estimate the position the corner by using the point of greatest curvature, thus
+The L-curve analysis aims to find a balance between the solution norm ($\eta(\alpha) = || \mathbf{p}_\alpha ||_2$) and the residual norm (\Cref{eq:chi}). This balance between the smoothing and fit quality, and therefore $\alpha_\mathrm{opt}$, is found in the ``corner'' of the L-curve. Numerically, one can reasonably estimate the position the corner by using the point of greatest curvature:
 %
 \begin{equation}
-\alpha_\mathrm{opt} = \max_{\alpha} \frac{\eta'\chi'' - \chi'\eta''}{(\eta'^2+\chi'^2)^{3/2}},
+\max_{\alpha \ge 0}\kappa(\alpha) =  \frac{\eta'\chi'' - \chi'\eta''}{(\eta'^2+\chi'^2)^{3/2}},
 \end{equation}
 %
 where the derivatives are taken with respect to $\alpha$.
 
-The \gls{gcv} approach compares the size of the residual norm with how well the regularized pseudo-inverse kernel ($\mathbf{p}_\alpha = K^\#\mathbf{y}$) inverts itself~\cite{1978-Craven-NM-31-377}:
+The \gls{gcv} approach attempts to find the $\alpha$ which produces the best regularized pseudo-inverse kernel matrix, as defined by $\mathbf{p}_\alpha = K^\#\mathbf{y}$~\cite{1978-Craven-NM-31-377}. The quality of $K^\#$ increases with $\alpha$, and therefore must be tempered with the residual norm, such that $\alpha_\mathrm{opt}$ satisfies: 
 %
 \begin{equation}
 \label{eq:gcv}
    \min_{\alpha \geq 0} G ( \alpha ) = \frac{ \chi^2 }{\mathrm{Tr} \left [ I - K K^\# \right]}.
 \end{equation}
 %
-For the case of Tikhonov regularization, the regularized pseudo-inverse kernel matrix is $K^\# = \left ( K^T K + \alpha^2 I \right )^{-1} K^{T}$~\cite{Zou2016}. We note the existence of an alternative method for cases when $K$ is large~\cite{1997-Golub-JCGS-6-1}. Finding $\alpha_\mathrm{opt}$ using this method can be difficult as $G ( \alpha )$ is generally quite flat.
+For the case of Tikhonov regularization, as considered here, $K^\# = \left ( K^T K + \alpha^2 I \right )^{-1} K^{T}$~\cite{Zou2016}. We note the existence of an alternative method for cases when $K$ is large~\cite{1997-Golub-JCGS-6-1}. Finding $\alpha_\mathrm{opt}$ using this method can be difficult as $G ( \alpha )$ is generally quite flat.
