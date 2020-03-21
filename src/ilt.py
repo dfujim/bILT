@@ -92,7 +92,7 @@ class ilt(object):
         x,y = self.line.get_data()
         idx = ind["ind"][0]
         self.annot.xy = (x[idx], y[idx])
-        self.annot.set_text(r'$\alpha = $%.3g' % self.results.index[idx])
+        self.annot.set_text(r'$\alpha = $%.3g' % self.get_alpha()[idx])
         self.annot.get_bbox_patch().set_alpha(0.1)            
     
     def _hover(self,event):
@@ -154,19 +154,15 @@ class ilt(object):
         else:     
             
             # get alpha
-            alpha = self.results.index.values
+            alpha = self.get_alpha()
             if len(alpha) == 0:    
                 raise RuntimeError('No values of alpha found. Fit some data first.')
             
             # make canvas
-            fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False,
-                                           figsize=(6,7))
+            plt.figure()
             
-            # draw chi2 as a function of alpha
-            self.draw_Ccurve(ax=ax1)
-            
-            # draw dchi/dalpha as a function of alpha
-            self.draw_Scurve(0.1, ax=ax2)
+            # draw chi as a function of alpha
+            self.draw_Scurve(0.1)
             
             # plot the L-curve
             plt.figure()
@@ -226,6 +222,32 @@ class ilt(object):
         ax.set_xlabel(r'$\alpha$')
         plt.tight_layout()
     
+    def draw_gcv(self, ax=None):
+        """
+            Draw the Generalized Cross-Validation Parameter curve
+        """
+        
+        # get gcv
+        alpha,gcv = self.get_gcv()
+        
+        # get index of best alpha
+        opt = np.argmin(gcv)
+
+        # get default axis
+        if ax is None:
+            ax = plt.gca()
+        
+        # plot 
+        ax.loglog(alpha, gcv, 'o-', zorder=1)
+        ax.plot(alpha[opt], gcv[opt], 's', zorder=2, 
+                label=r'$\alpha_{opt} = %g$' % alpha[opt])
+        
+        # plot elements
+        ax.legend()
+        ax.set_xlabel(r'$\alpha$')
+        ax.set_ylabel('GCV')
+        plt.tight_layout()
+        
     def draw_Lcurve(self):
         """
             Draw the L curve with fancy mouse hover and highlighting
@@ -290,7 +312,7 @@ class ilt(object):
             
         alpha, chi = self.get_Scurve()
         
-        ax.semilogx(alpha, chi, ".-",zorder=1)
+        ax.semilogx(alpha, chi, "o-",zorder=1)
         ax.set_xlabel(r"$\alpha$")
         ax.set_ylabel(r"$\chi$")
         
@@ -359,7 +381,7 @@ class ilt(object):
             alpha = np.asarray(alpha)
             
             # don't repeat alphas that are already fitted
-            alpha = np.setdiff1d(alpha, self.results.index.values)
+            alpha = np.setdiff1d(alpha, self.get_alpha())
             
             # easy end case
             if len(alpha) == 0:
@@ -386,7 +408,7 @@ class ilt(object):
         # do a single alpha case
         else:
             # don't repeat alphas that are already fitted
-            if alpha in self.results.index.values:
+            if alpha in self.get_alpha():
                 return
             
             p = [_fit_single(alpha, self.y, self.K, self.S, maxiter)]            
@@ -399,6 +421,9 @@ class ilt(object):
         
         # sort
         self.results.sort_index(inplace=True)
+    
+    def get_alpha(self):
+        return self.results.index.values
     
     def get_chi2(self, alpha=None):
         """
@@ -415,7 +440,7 @@ class ilt(object):
         
         # do single alpha
         else:
-            if alpha not in self.results.index:
+            if alpha not in self.get_alpha():
                 self.fit(alpha)
             chi2 = chifn(self.results[alpha])
             
@@ -439,7 +464,7 @@ class ilt(object):
         """Calculate and return the fit points for a particular value of alpha"""
         
         # check if alpha is in the list of calculated alphas
-        if alpha not in self.results.index:
+        if alpha not in self.get_alpha():
             self.fit(alpha)
         
         # return the fit results
@@ -454,7 +479,7 @@ class ilt(object):
         
         chi2 = self.get_chi2()
         
-        return (self.results.index.values, chi2)
+        return (self.get_alpha(), chi2)
     
     def get_rCcurve(self):
         """
@@ -463,7 +488,47 @@ class ilt(object):
             returns (alpha,rchi2)
         """
         rchi2 = self.get_rchi2()
-        return (self.results.index.values,rchi2)
+        return (self.get_alpha(),rchi2)
+    
+    def get_gcv(self):
+        """Calculate the generalized cross-validation parameter"""
+        
+        # get needed data
+        K = self.K
+        p = self.results
+        y = self.y
+        KT = K.T
+        I = np.eye(K.shape[1])
+        alpha = self.get_alpha()
+        
+        # calculate gcv
+        gcv = []    
+        for a in alpha:
+        
+            # numerator 
+            numerator = self.get_chi2(a)
+        
+            # regularized inverse of the kernel
+            Kinv = np.matmul(np.linalg.inv(np.matmul(KT, K) + a*I), KT)
+        
+            # denominator
+            denominator = (K.shape[1] - np.trace(np.matmul(K,Kinv)))**2
+            
+            gcv.append(numerator / denominator)
+            
+        return (self.get_alpha(),np.array(gcv))
+    
+    def get_gcv_opt(self):
+        """
+            Calculate alpha_opt based on the generalized cross-validation 
+            parameter (min gcv)
+        """
+        
+        # get gcv
+        alpha, gcv = self.get_gcv()
+        
+        # find min
+        return alpha[np.argmin(gcv)]
     
     def get_Lcurve(self):
         """
@@ -485,7 +550,7 @@ class ilt(object):
         
         # get the Lcurve
         x, y = self.get_Lcurve()
-        alpha = self.results.index.values
+        alpha = self.get_alpha()
         
         # take the log
         x = np.log(x)
@@ -516,7 +581,7 @@ class ilt(object):
         chi = np.sqrt(self.get_chi2())
         
         # return alpha, residual norm
-        return (self.results.index.values, chi)
+        return (self.get_alpha(), chi)
     
     def get_Sgrad(self):
         """
@@ -528,12 +593,12 @@ class ilt(object):
         ln_chi = np.log(chi)
         
         # ...and the natural logarithm of alpha
-        ln_alpha = np.log(self.results.index)
+        ln_alpha = np.log(self.get_alpha())
     
         # take the gradient
         dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
         
-        return (self.results.index.values, dlnchi_dlnalpha)
+        return (self.get_alpha(), dlnchi_dlnalpha)
     
     def get_Scurve_opt(self,threshold=0.1):
         """
@@ -552,7 +617,7 @@ class ilt(object):
         """
         
         # check if alpha is in the list of calculated alphas
-        if alpha not in self.results.index:
+        if alpha not in self.get_alpha():
             self.fit(alpha)
             
         # return the fit results
@@ -598,10 +663,10 @@ class ilt(object):
             
         # add results 
         output['p'] = self.results.apply(np.ndarray.tolist).tolist()
-        output['alpha'] = self.results.index.tolist()
+        output['alpha'] = self.get_alpha()
             
         # make numpy arrays lists
-        for key in ('x', 'y', 'yerr', 'lamb', 'K'):
+        for key in ('x', 'y', 'yerr', 'lamb', 'K','alpha'):
             output[key] = output[key].tolist()
         
         # write to file 
@@ -635,8 +700,5 @@ def _fit_single(alpha, y, K, S, maxiter):
     # solve
     if maxiter is None: p, r = nnls(L, q)
     else:               p, r = nnls(L, q, maxiter)
-
-    # calculate the generalize cross-validation (GCV) parameter tau
-    # tau = np.trace(np.eye(K.shape[1]) - K ( np.matmul(K.T, K) + alpha * alpha * np.matmul(L.T, L) ) K.T )
 
     return p
