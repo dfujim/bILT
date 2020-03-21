@@ -192,36 +192,6 @@ class ilt(object):
         ax.set_ylabel('$y$')
         plt.tight_layout()
         
-    def draw_Ccurve(self, ax=None):
-        """
-            Draw the chisquared vs alpha
-            ax:     axis to draw in    
-        """
-        
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-            
-        ax.semilogx(*self.get_Ccurve())
-        ax.set_ylabel(r'$\chi^2$')
-        ax.set_xlabel(r'$\alpha$')
-        plt.tight_layout()
-        
-    def draw_rCcurve(self, ax=None):
-        """
-            Draw the reduced chisquared vs alpha
-            ax:     axis to draw in    
-        """
-        # get default axis
-        if ax is None:
-            ax = plt.gca()
-            
-            
-        ax.semilogx(*self.get_rCcurve())
-        ax.set_ylabel(r'$\chi^2/N$')
-        ax.set_xlabel(r'$\alpha$')
-        plt.tight_layout()
-    
     def draw_gcv(self, ax=None):
         """
             Draw the Generalized Cross-Validation Parameter curve
@@ -470,26 +440,6 @@ class ilt(object):
         # return the fit results
         return np.dot(self.K, self.results[alpha])
         
-    def get_Ccurve(self):
-        """
-            Return the chi^2 for all values of alpha. 
-            
-            returns (alpha,chi2)
-        """
-        
-        chi2 = self.get_chi2()
-        
-        return (self.get_alpha(), chi2)
-    
-    def get_rCcurve(self):
-        """
-            Return the reduced chi^2 for all values of alpha. 
-            
-            returns (alpha,rchi2)
-        """
-        rchi2 = self.get_rchi2()
-        return (self.get_alpha(),rchi2)
-    
     def get_gcv(self):
         """Calculate the generalized cross-validation parameter"""
         
