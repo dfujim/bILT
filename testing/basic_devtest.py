@@ -9,11 +9,11 @@ import numpy as np
 
 x,y,dy = bd.bdata(40214, year=2009).asym('c') 
 T1 = np.logspace(np.log(0.01 * 1.2096), np.log(100.0 * 1.2096), 100)
-alpha = np.logspace(2, 8, 50)
+alpha = np.logspace(2, 5, 50)
 
 f = pulsed_exp(1.21,4)
 fn = lambda x,w: f(x,w,1) 
-I = ilt(x,y,dy,fn,T1)
+I = ilt(x,y,dy,fn,T1,nproc=4)
 I.fit(alpha)
 
 # ~ plt.figure()
@@ -25,16 +25,21 @@ I.fit(alpha)
 # ~ plt.figure()
 # ~ I.draw_logdist(10)
 
-plt.figure()
-I.draw_Lcurve()
+# ~ plt.figure()
+# ~ I.draw_Lcurve()
+
+# ~ plt.figure()
+# ~ I.draw_Scurve(0.1)
+
+# ~ plt.figure()
+# ~ I.draw_Ccurve()
+
+# ~ alpha,curve = I.get_Lcurve_curvature()
+# ~ plt.figure()
+# ~ plt.semilogx(alpha,curve,'.-')
+
+# ~ plt.figure()
+# ~ I.draw_gcv()
 
 
-
-
-
-
-
-
-
-
-
+# ~ I.write('test.yaml')
