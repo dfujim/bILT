@@ -43,8 +43,7 @@ class ilt(object):
             nproc:      number of processors to use
             results:    pd.Series fit results with index alpha and values p
                         alpha:      Tikhonov regularization parameter      
-                        p:          array of probabilities corresponding to lamb, 
-                                    fit results
+                        p:          array of weights corresponding to each lamb
             S:          diagonal matrix of 1/yerr
                         diagonal error matrix: diag(1/yerr)
             x:          array of time steps in data to fit
@@ -158,15 +157,23 @@ class ilt(object):
             if len(alpha) == 0:    
                 raise RuntimeError('No values of alpha found. Fit some data first.')
             
-            # make canvas
+            # draw S-curve with a default threshold
             plt.figure()
-            
-            # draw chi as a function of alpha
             self.draw_Scurve(0.1)
+            plt.title('S-Curve')
+            plt.tight_layout()
             
             # plot the L-curve
             plt.figure()
             self.draw_Lcurve()
+            plt.title('L-Curve')
+            plt.tight_layout()
+            
+            # draw the GCV
+            plt.figure()
+            self.draw_gcv()
+            plt.title('Generalized Cross-Validation')
+            plt.tight_layout()
 
     def draw_fit(self, alpha, ax=None):
         """
@@ -282,7 +289,7 @@ class ilt(object):
             
         alpha, chi = self.get_Scurve()
         
-        ax.semilogx(alpha, chi, "o-",zorder=1)
+        ax.loglog(alpha, chi, "o-",zorder=1)
         ax.set_xlabel(r"$\alpha$")
         ax.set_ylabel(r"$\chi$")
         
@@ -644,7 +651,7 @@ def _fit_single(alpha, y, K, S, maxiter):
     
     # concatenate regularization
     # https://stackoverflow.com/a/35423745
-    L = np.concatenate([L, np.sqrt(alpha) * np.eye(K.shape[1])])
+    L = np.concatenate([L, alpha * np.eye(K.shape[1])])
     q = np.concatenate((q, np.zeros(K.shape[1])))
 
     # solve
