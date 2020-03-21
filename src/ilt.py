@@ -243,11 +243,12 @@ class ilt(object):
         self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
         
         # get the point of max curvature
-        alpha,curve = self.get_Lcurvature()
-        alpha_opt = alpha[np.argmax(curve)]
+        alpha_opt = self.get_Lcurve_opt()
         
         # draw the point of max curvature
-        axp.plot(chi[alpha_opt],p_norm[alpha_opt],'s',zorder=2)
+        axp.plot(chi[alpha_opt], p_norm[alpha_opt], 's', zorder=2,
+                 label = r'$\alpha_{opt} = %g$' % alpha_opt)
+        plt.legend()
         
         # annotate the parametric plot on mouse hover
         self.annot = axp.annotate("",
@@ -287,17 +288,18 @@ class ilt(object):
         if ax is None:
             ax = plt.gca()
             
-        alpha, dlnchi_dlnalpha = self.get_Scurve()
+        alpha, chi = self.get_Scurve()
         
-        ax.semilogx(alpha, dlnchi_dlnalpha, ".-")
+        ax.semilogx(alpha, chi, ".-",zorder=1)
         ax.set_xlabel(r"$\alpha$")
-        ax.set_ylabel(r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha$")
+        ax.set_ylabel(r"$\chi$")
         
         if threshold > 0:
-            ax.axhline(threshold, linestyle="--", color="k", zorder=0,
-                label=r"$\mathrm{d} \ln \chi / \mathrm{d} \ln \alpha = %g$" % threshold)
-        
-            ax.legend()
+            alpha_opt = self.get_Scurve_opt(threshold)
+            plt.plot(alpha_opt, chi[alpha_opt], 's', zorder=2,
+                     label = r'$\alpha_{opt} = %g$ (threshold of %g)' % \
+                            (alpha_opt,threshold))
+            plt.legend()
         plt.tight_layout()
         
     def draw_logdist(self, alpha, ax=None):
@@ -500,12 +502,30 @@ class ilt(object):
         
         return (alpha,curvature)
     
+    def get_Lcurve_opt(self):
+        """
+            Find alpha opt based on the L curve: point of maximum curvature
+        """
+        alpha,curve = self.get_Lcurvature()
+        return alpha[np.argmax(curve)]
+    
     def get_Scurve(self):
-        """return ( alpha, dln(chi)/dln(alpha) )"""
+        """return ( alpha, chi )"""
         
         # natural logarithm of chi
-        chi2 = self.get_chi2()
-        ln_chi = np.log(np.sqrt(chi2))
+        chi = np.sqrt(self.get_chi2())
+        
+        # return alpha, residual norm
+        return (self.results.index.values, chi)
+    
+    def get_Sgrad(self):
+        """
+            Get the gradient of the log of the S curve
+            return ( alpha, dln(chi) / dln(alpha) )
+        """
+        
+        chi = np.sqrt(self.get_chi2())
+        ln_chi = np.log(chi)
         
         # ...and the natural logarithm of alpha
         ln_alpha = np.log(self.results.index)
@@ -514,6 +534,16 @@ class ilt(object):
         dlnchi_dlnalpha = np.gradient(ln_chi, ln_alpha)
         
         return (self.results.index.values, dlnchi_dlnalpha)
+    
+    def get_Scurve_opt(self,threshold=0.1):
+        """
+            Get optimum value of alpha based on the S curve: when 
+            d ln(chi) / d ln(alpha) > threshold
+        """
+        
+        alpha, grad = self.get_Sgrad()
+        alpha_contender = alpha[grad>threshold]
+        return min(alpha_contender)
     
     def get_weights(self, alpha):
         """
