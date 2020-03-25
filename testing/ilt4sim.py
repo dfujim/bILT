@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from bILT import ilt
 from bfit.fitting.functions import pulsed_exp, pulsed_strexp
 from scipy.optimize import curve_fit
-from discriminator import discriminator
+from bILT.testing.discriminator import discriminator
 
 class ilt4sim(ilt):
     
@@ -252,3 +252,4 @@ class ilt4sim(ilt):
     
         else:
             super().draw(alpha)
+
