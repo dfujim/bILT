@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from bILT import ilt
 from bfit.fitting.functions import pulsed_exp, pulsed_strexp
 from scipy.optimize import curve_fit
+from discriminator import discriminator
 
 class ilt4sim(ilt):
     
@@ -18,9 +19,10 @@ class ilt4sim(ilt):
     alpha = np.logspace(1,5,50)
     nT1 = 1000
     
-    def __init__(self,filename):
+    def __init__(self,filename,nproc=4):
         """
-            filename: yaml or csv or without extension
+            filename:   yaml or csv or without extension
+            nproc:      number of processors
         """
         
         # get file names
@@ -55,7 +57,9 @@ class ilt4sim(ilt):
         super().__init__(df['t'].values, 
                       df[self.asym_type].values, 
                       df[self.asym_err].values, 
-                      lambda x, w : self.pexp(x, w, 1))
+                      lambda x, w : self.pexp(x, w, 1),
+                      self.T1,
+                      nproc)
 
     def _rebin(self, t, x, dx, rebin):
         """
@@ -98,20 +102,34 @@ class ilt4sim(ilt):
                 dx_rebin.append(1./wsum**0.5)
         return np.array([t_rebin,x_rebin,dx_rebin])
 
-    def fit(self,alpha=None, T1=None, maxiter=10000):
+    def fit(self,alpha=None, maxiter=10000):
         """
             If inputs are None, use defaults
         """
 
         if alpha is None: 
             alpha = self.alpha
-        if T1 is None:
-            T1 = self.T1
-
+        
         # run and draw diagnostics
-        super().fit(alpha, T1, maxiter)
+        super().fit(alpha, maxiter)
     
-    def draw(self,alpha_opt=None,rebin=1,fitfn='exp'):
+    def discriminate(self,alpha,threshold, crop_distance=10, draw=False):
+        """ 
+            Apply discriminator method of finding the peaks
+            
+            returns: [location_of_max, height_of_max, width_at_threshold]
+        """
+        
+        # get weights and T1
+        p = self.get_weights(alpha)*self.lamb
+        p /= sum(p)
+        T1 = 1/self.lamb
+        
+        
+        # get
+        return discriminator(T1, p, threshold, crop_distance, draw)
+    
+    def draw(self,alpha=None,rebin=1,fitfn='exp'):
         """
             Draw fit or range of fits. 
             
@@ -131,17 +149,16 @@ class ilt4sim(ilt):
                 p:      array of unnormalized weights
                 fity:   array of final fit function points
         """
-        
-        # check if range of alphas
-        if not self.isiter:
-            alpha_opt = self.alpha
             
         # draw things for a single alpha only 
-        if alpha_opt is not None:
+        if alpha is not None:
             
             # get opt data 
-            p, fity, chi2 = self._fit_single(alpha_opt)
-            rchi2 = chi2 / len(self.x)
+            fity = self.get_fit(alpha)
+            p = self.get_weights(alpha)
+            chi2 = self.get_chi2(alpha)
+            rchi2 = self.get_rchi2(alpha)
+            
             print(r"$\tilde{\chi}^{2} = %f$" % rchi2)
             
             # get axes for drawing
@@ -217,16 +234,16 @@ class ilt4sim(ilt):
             ax1.set_xlabel("Time (s)")
             
             # draw the probability distribution 
-            z = 1/self.z
-            p /= z # normalize
-            ax2.semilogx(z,p/sum(p))
+            lamb = 1/self.lamb
+            p /= lamb # normalize
+            ax2.semilogx(lamb,p/sum(p))
             ax2.set_ylabel("Probability Density")
             ax2.set_xlabel(r"$T_1$ ($s^{-1}$)")
             self.pnorm = p/sum(p)
             
             # titles
-            ax1.set_title(r"$\alpha = %g$" % alpha_opt)
-            ax2.set_title(r"$\alpha = %g$" % alpha_opt)
+            ax1.set_title(r"$\alpha = %g$" % alpha)
+            ax2.set_title(r"$\alpha = %g$" % alpha)
             fig1.tight_layout()
             fig2.tight_layout()
             fig1.legend()
@@ -234,4 +251,4 @@ class ilt4sim(ilt):
             # ~ return(p, fity)
     
         else:
-            super().draw(alpha_opt)
+            super().draw(alpha)

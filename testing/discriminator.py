@@ -97,7 +97,6 @@ def discriminator(z,p,threshold=None, crop_distance=10, draw=False):
         plt.legend(fontsize='xx-small',loc=0,bbox_to_anchor=(1,1))
         plt.tight_layout()
             
-            
     peak_loc    = np.array(peak_loc)
     peak_height = np.array(peak_height)
     peak_width  = np.array(peak_width)
