@@ -5,9 +5,14 @@
 import os, glob
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from bILT.testing.ilt4sim import ilt4sim
 import datetime
+
+# Turn interactive plotting off
+plt.ioff()
 
 # get all yaml files
 files = np.array(glob.glob('*.yaml'))
@@ -19,7 +24,7 @@ scurve_threshold = 0.1
 nproc = 8
 
 # run the analyzer
-for file in files[:1]:
+for file in files:
     print(file)
     I = ilt4sim(file,nproc=nproc)
     I.fit()
