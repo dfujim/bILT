@@ -628,8 +628,13 @@ class ilt(object):
         
         # write to file 
         print("writing...", end=' ', flush=True)
-        with open(filename, 'w') as fid:
-            fid.write(yaml.safe_dump(output))
+        
+        try:
+            with open(filename, 'w') as fid:
+                fid.write(yaml.safe_dump(output))
+        except Exception as err:
+            print(err)
+            return output
         print("done", flush=True)
 
 # Fit a fingle function             
