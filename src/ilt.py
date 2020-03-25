@@ -611,13 +611,10 @@ class ilt(object):
             notes:          additional fields to write
         """
         
-        # get all attributes
-        output = {**self.__dict__,**notes}
+        # get needed attributes
+        output = {k:self.__dict__[k] for k in ('x', 'y', 'yerr', 'lamb', 'K',)}
+        output = {**output,**notes}
         
-        # remove the useless attributes, or those too large to be useful
-        for key in ('fn', 'S','results'):
-            del output[key]
-            
         # add results 
         output['p'] = self.results.apply(np.ndarray.tolist).tolist()
         output['alpha'] = self.get_alpha()
