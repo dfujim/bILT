@@ -225,9 +225,11 @@ class ilt(object):
         ax.set_ylabel('GCV')
         plt.tight_layout()
         
-    def draw_Lcurve(self):
+    def draw_Lcurve(self,*args,**kwargs):
         """
             Draw the L curve with fancy mouse hover and highlighting
+            
+            arguments passed to get_Lcurve_opt
         """
         
         # make figure
@@ -242,7 +244,7 @@ class ilt(object):
         self.line, = axp.plot(chi, p_norm, "o-", zorder=1)
         
         # get the point of max curvature
-        alpha_opt = self.get_Lcurve_opt()
+        alpha_opt = self.get_Lcurve_opt(*args,**kwargs)
         
         # draw the point of max curvature
         axp.plot(chi[alpha_opt], p_norm[alpha_opt], 's', zorder=2,
@@ -532,7 +534,7 @@ class ilt(object):
             
             mode:       auto:       switch between other modes based on curvature
                         curvature:  point of maximum curvature
-                        balance:    point of min(x*y)
+                        balance:    point of min(x**2*y)
                         
             threshold:  if < threshold, use balance mode, else use curvature mode
         """
@@ -545,7 +547,7 @@ class ilt(object):
             return alpha[np.argmax(curve)]
         
         elif mode in 'balance':
-            return alpha[np.argmin(x*y)]
+            return alpha[np.argmin(x**2*y)]
         
         elif mode in 'auto':
             
