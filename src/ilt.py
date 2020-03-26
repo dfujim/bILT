@@ -540,6 +540,8 @@ class ilt(object):
         """
         
         x,y = self.get_Lcurve()
+        x = x.values
+        y = y.values
         alpha = self.get_alpha()
         
         if mode in 'curvature':
