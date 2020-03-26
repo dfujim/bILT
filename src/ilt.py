@@ -546,6 +546,14 @@ class ilt(object):
         
         elif mode in 'balance':
             return alpha[np.argmin(x*y)]
+        
+        elif mode in 'auto':
+            
+            alpha,curve = self.get_Lcurvature()
+            if max(curve) > threshold:
+                return self.get_Lcurve_opt(mode='curvature')
+            else:
+                return self.get_Lcurve_opt(mode='balance')
             
         else:
             raise RuntimeError('Bad input. Mode must be one of "curvature" or "balance"')
