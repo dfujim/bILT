@@ -289,9 +289,9 @@ class ilt(object):
             
         alpha, chi = self.get_Scurve()
         
-        ax.loglog(alpha, chi, "o-",zorder=1)
+        ax.semilogx(alpha, chi, "o-",zorder=1)
         ax.set_xlabel(r"$\alpha$")
-        ax.set_ylabel(r"$\chi$")
+        ax.set_ylabel(r"$\chi/\sqrt{N}$")
         
         if threshold > 0:
             alpha_opt = self.get_Scurve_opt(threshold)
@@ -457,21 +457,23 @@ class ilt(object):
         KT = K.T
         I = np.eye(K.shape[1])
         alpha = self.get_alpha()
+        chi2 = self.get_chi2()
+        
+        
+        # prep calculations
+        KTK = np.matmul(KT, K)
         
         # calculate gcv
         gcv = []    
-        for a in alpha:
-        
-            # numerator 
-            numerator = self.get_chi2(a)
+        for a,c in zip(alpha,chi2):
         
             # regularized inverse of the kernel
-            Kinv = np.matmul(np.linalg.inv(np.matmul(KT, K) + a*I), KT)
+            Kinv = np.matmul(np.linalg.inv(KTK + a*I), KT)
         
             # denominator
             denominator = (K.shape[1] - np.trace(np.matmul(K,Kinv)))**2
             
-            gcv.append(numerator / denominator)
+            gcv.append(c / denominator)
             
         return (self.get_alpha(),np.array(gcv))
     
@@ -524,18 +526,35 @@ class ilt(object):
         
         return (alpha,curvature)
     
-    def get_Lcurve_opt(self):
+    def get_Lcurve_opt(self,mode='auto',threshold=7):
         """
-            Find alpha opt based on the L curve: point of maximum curvature
+            Find alpha opt based on the L curve
+            
+            mode:       auto:       switch between other modes based on curvature
+                        curvature:  point of maximum curvature
+                        balance:    point of min(x*y)
+                        
+            threshold:  if < threshold, use balance mode, else use curvature mode
         """
-        alpha,curve = self.get_Lcurvature()
-        return alpha[np.argmax(curve)]
-    
+        
+        x,y = self.get_Lcurve()
+        alpha = self.get_alpha()
+        
+        if mode in 'curvature':
+            alpha,curve = self.get_Lcurvature()
+            return alpha[np.argmax(curve)]
+        
+        elif mode in 'balance':
+            return alpha[np.argmin(x*y)]
+            
+        else:
+            raise RuntimeError('Bad input. Mode must be one of "curvature" or "balance"')
+        
     def get_Scurve(self):
-        """return ( alpha, chi )"""
+        """return ( alpha, rchi )"""
         
         # natural logarithm of chi
-        chi = np.sqrt(self.get_chi2())
+        chi = np.sqrt(self.get_rchi2())
         
         # return alpha, residual norm
         return (self.get_alpha(), chi)
