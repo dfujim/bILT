@@ -74,7 +74,7 @@ where $\mathbf{p}$ is a vector weighting each of the $R \left (t_{i}, t^{\prime}
 %
 \begin{equation}
    \label{eq:kernel}
-   [K]_{ij} = A_{0} P(t_i;\lambda_j).
+   K_{ij} = A_{0} P(t_i;\lambda_j).
 \end{equation}
 %
 The solution of \Cref{eq:signal-matrix} satisfies
@@ -131,7 +131,13 @@ The L-curve analysis aims to find a balance between the solution norm ($\eta(\al
 \max_{\alpha \ge 0}\kappa(\alpha) =  \frac{\eta'\chi'' - \chi'\eta''}{(\eta'^2+\chi'^2)^{3/2}},
 \end{equation}
 %
-where the derivatives are taken with respect to $\alpha$.
+where the derivatives are taken with respect to $\alpha$. However if the curvature is slight, then the curvature method tends to find values of $\alpha$ for which $\chi$ is too large. To resolve this the following ``balanced'' method reproduces the corner for highly curved L-curves, as well as for cases when the curvature is small:
+%
+\begin{equation}
+\min_{\alpha \ge 0} \chi^2\eta,
+\end{equation}
+%
+where the exponent is empirically determined. 
 
 The \gls{gcv} approach attempts to find the $\alpha$ which produces the best regularized pseudo-inverse kernel matrix, as defined by $\mathbf{p}_\alpha = K^\#\mathbf{y}$~\cite{1978-Craven-NM-31-377}. The quality of $K^\#$ increases with $\alpha$, and therefore must be tempered with the residual norm, such that $\alpha_\mathrm{opt}$ satisfies: 
 %
