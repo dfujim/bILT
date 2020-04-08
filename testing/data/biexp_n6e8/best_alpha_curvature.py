@@ -18,7 +18,7 @@ plt.ioff()
 files = np.array(glob.glob('*.yaml'))
 
 # settings
-results = {'scurve':[],'lcurve':[],'gcv':[],'filename':[]}
+results = {'scurve':[],'lcurve_b':[],'lcurve_c':[],'gcv':[],'filename':[]}
 outfile = 'best_alpha.csv'
 scurve_threshold = 0.1
 nproc = 8
@@ -31,7 +31,8 @@ for file in files:
 
     # draw
     plt.figure()
-    I.draw_Lcurve()
+    I.draw_Lcurve(mode='curvature')
+    I.draw_Lcurve(mode='balance')
     plt.tight_layout()
     plt.savefig('Plots/Lcurve_%s.pdf' % os.path.splitext(file)[0])
 
@@ -56,7 +57,8 @@ for file in files:
     
     results['filename'].append(file)
     results['scurve'].append(I.get_Scurve_opt(threshold=scurve_threshold))
-    results['lcurve'].append(I.get_Lcurve_opt())
+    results['lcurve_c'].append(I.get_Lcurve_opt(mode='curvature'))
+    results['lcurve_b'].append(I.get_Lcurve_opt(mode='balance'))
     results['gcv'].append(alph[np.argmin(data)])
 
 df = pd.DataFrame(results)
