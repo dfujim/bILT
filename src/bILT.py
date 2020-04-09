@@ -75,6 +75,12 @@ class bILT(ilt):
         dat = bd.bdata(self.run, self.year)
         self.x,self.y,self.yerr = dat.asym('c', rebin=self.rebin)
         
+        # remove zero error values
+        idx = self.yerr != 0
+        self.x = self.x[idx]
+        self.y = self.y[idx]
+        self.yerr = self.yerr[idx]
+        
         # get function 
         f = pulsed_exp(lifetime=bd.life[self.probe], pulse_len=dat.get_pulse_s())
         self.fn = lambda x,w: f(x,w,1) 
