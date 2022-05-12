@@ -42,7 +42,7 @@ class data_iterator(object):
                 'polarization function f(x)':   self.fn,
                 'beam pulse (s)':               self.beam_pulse,
                 'A_beta':                       self.A_beta,
-                'n':                            self.n,
+                'n':                            int(self.n),
                 'output':                       rootfile,
                 'histogram n_bins':             self.hist_nbins,
                 'histogram t_min':              self.hist_tmin,
@@ -58,7 +58,9 @@ class data_iterator(object):
             yaml.safe_dump(yaml_dict,fid)
 
         # run 
-        os.system('data_generator_pp/data_generator_pp %s' % yamlfile)
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(path, 'data_generator_pp', 'data_generator_pp')
+        os.system(f'{path} {yamlfile}')
 
         # make header for csv
         header = ['Monte Carlo simulation of β-NMR data',
