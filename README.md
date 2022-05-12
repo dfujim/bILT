@@ -114,12 +114,16 @@ Inherits from `ilt`
 Object constructor
 
 ```python
-bILT(run,year=-1,rebin=1,probe='Li8')
+bILT(run, year=-1, rebin=1, probe='Li8', T1=1000, nproc=1)
     """
         run:        run number
         year:       year 
         rebin:      rebinning in asymmetry calculation
         probe:      probe lifetime to use in exp calculation
+        T1:         if int: number of T1 values in array within 0.01*tau and
+                        100*tau
+                        else:   user-specified T1 array
+        nproc:      number of processsors to use
         
         if run is a filename, read from that file
     """
