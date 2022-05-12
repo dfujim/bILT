@@ -57,29 +57,29 @@ Object public functions
 
 | Function | Description |
 | --- | --- |
-| `draw(self, alpha=None, fig=None)` | Draw fit or range of fits |
-| `draw_fit(self, alpha, ax=None)` | Draw the fit and the data |
-| `draw_gcv(self, ax=None)` | Draw the Generalized Cross-Validation Parameter curve |
-| `draw_Lcurve(self,*args,**kwargs)` | Draw the L curve with fancy mouse hover and highlighting |
-| `draw_Scurve(self, threshold=-1, ax=None)` | Draw alpha vs gradient of logs |
-| `draw_logdist(self, alpha, ax=None)` | Draw the weights as a function of lamb, normalized for a log distribution of lambda |
-| `draw_weights(self, alpha, ax=None)` | Draw the weights as a function of lamb |
-| `fit(self, alpha, maxiter=None)` | Run the non-negative least squares algorithm for a single value of alpha (the regularization parameter) or an array of alphas |
-| `get_alpha(self)` | Return the set of alphas used |
-| `get_chi2(self, alpha=None)` | Calculate and return the chisquared for a particular value of alpha |
-| `get_rchi2(self, alpha=None)` | Calculate and return the reduced chisquared for a particular value of alpha |
-| `get_fit(self, alpha)` | Calculate and return the fit points for a particular value of alpha |
-| `get_gcv(self)` | Calculate the generalized cross-validation parameter |
-| `get_gcv_opt(self)` | Calculate alpha_opt based on the generalized cross-validation parameter (min gcv) |
-| `get_Lcurve(self)` | return (chi, norm of weight vector) |
-| `get_Lcurvature(self)` | find the curvature of the l curve |
-| `get_Lcurve_opt(self,mode='auto',threshold=7)` | Find alpha opt based on the L curve |
-| `get_Scurve(self)` | return ( alpha, rchi ) |
-| `get_Sgrad(self)` | Get the gradient of the log of the S curve |
-| `get_Scurve_opt(self,threshold=0.1)` | Get optimum value of alpha based on the S curve: when `d ln(chi) / d ln(alpha) > threshold` |
-| `get_weights(self, alpha)` | Calculate and return the distribution of weights for a particular value of alpha |
-| `read(self,filename)` | Read yaml file and set properties |
-| `write(self, filename, **notes)` | Write to yaml file |
+| [`draw(self, alpha=None, fig=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L110) | Draw fit or range of fits |
+| [`draw_fit(self, alpha, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L178) | Draw the fit and the data |
+| [`draw_gcv(self, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L202) | Draw the Generalized Cross-Validation Parameter curve |
+| [`draw_Lcurve(self,*args,**kwargs)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L228) | Draw the L curve with fancy mouse hover and highlighting |
+| [`draw_Scurve(self, threshold=-1, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L280) | Draw alpha vs gradient of logs |
+| [`draw_logdist(self, alpha, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L306) | Draw the weights as a function of lamb, normalized for a log distribution of lambda |
+| [`draw_weights(self, alpha, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L327) | Draw the weights as a function of lamb |
+| [`fit(self, alpha, maxiter=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L345) | Run the non-negative least squares algorithm for a single value of alpha (the regularization parameter) or an array of alphas |
+| [`get_alpha(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L404) | Return the set of alphas used |
+| [`get_chi2(self, alpha=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L407) | Calculate and return the chisquared for a particular value of alpha |
+| [`get_rchi2(self, alpha=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L428) | Calculate and return the reduced chisquared for a particular value of alpha |
+| [`get_fit(self, alpha)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L442) | Calculate and return the fit points for a particular value of alpha |
+| [`get_gcv(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L452) | Calculate the generalized cross-validation parameter |
+| [`get_gcv_opt(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L482) | Calculate alpha_opt based on the generalized cross-validation parameter (min gcv) |
+| [`get_Lcurve(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L494) | return (chi, norm of weight vector) |
+| [`get_Lcurvature(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L507) | find the curvature of the l curve |
+| [`get_Lcurve_opt(self,mode='auto',threshold=7)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L531) | Find alpha opt based on the L curve |
+| [`get_Scurve(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L565) | return ( alpha, rchi ) |
+| [`get_Sgrad(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L574) | Get the gradient of the log of the S curve |
+| [`get_Scurve_opt(self,threshold=0.1)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L591) | Get optimum value of alpha based on the S curve: when `d ln(chi) / d ln(alpha) > threshold` |
+| [`get_weights(self, alpha)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L601) | Calculate and return the distribution of weights for a particular value of alpha |
+| [`read(self,filename)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L614) | Read yaml file and set properties |
+| [`write(self, filename, **notes)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L637) | Write to yaml file |
 
 ### bILT.bILT
 
