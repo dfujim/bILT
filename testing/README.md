@@ -1,6 +1,6 @@
 # Generating Test Data
 
-Data generation is done at the base level by the [data_generator](https://github.com/dfujim/bILT/tree/master/testing/data_generator_pp)
+Data generation is done at the base level by the [data_generator](https://github.com/dfujim/bILT/tree/master/testing/data_generator_pp). To compile the needed files go to `bILT/testing/data_generator_pp` and call `make`.
 
 To improve ease of usage in generating data, use the [data_iterator](https://github.com/dfujim/bILT/blob/master/testing/data_iterator.py) object.
 
