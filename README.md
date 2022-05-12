@@ -18,13 +18,15 @@ The `bILT` package provides two objects: [`ilt`](https://github.com/dfujim/bILT/
 Object constructor
 
 ```python
-ilt(x,y=None,yerr=None,fn=None)
+ilt(x, y=None, yerr=None, fn=None, lamb=None, nproc=1)
     """
         x:          array of time steps in data to fit
         y:          array of data points f(t) needing to fit
         yerr:       array of errors
         fn:         function handle with signature f(x,w)
-        
+        lamb:       array of transformed values corresponding to the 
+                    probabilities in the output (ex: np.logspace(-5,5,500))
+        nproc:      number of processors to use
         If x is a string, read input from filename
     """ 
 ```
@@ -53,59 +55,31 @@ z:          array of transformed values corresponding to the
 
 Object public functions
 
-```python
-draw(alpha_opt=None,fig=None)
-    """
-        Draw fit or range of fits. 
-        
-        alpha_opt:  if None draw:
-                        alpha v chi
-                        alpha v dchi/dalpha
-                        L-curve
-                    else draw:
-                        data & fit
-                        distribution 
-        fig:    optional figure handle for redrawing when alpha_opt != None
-        
-        returns: (p, fity, chi2)
-        
-            p:      array of unnormalized weights
-            fity:   array of final fit function points
-            chi2:   chisquared value of fit
-    """
-    
-fit(alpha,z,maxiter=None)
-    """
-        Run the non-negative least squares algorithm for a single value of 
-        alpha (the regularization parameter) or an array of alphas
-    
-        alpha:      Tikhonov regularization parameter (may be list or number)
-        z:          array of transformed values corresponding to the 
-                    probabilities in the output (ex: np.logspace(-5,5,500))
-        maxiter:    max number of iterations in solver
-        
-        returns: (p, fity, chi2)
-    
-            p:      array of unnormalized weights
-            fity:   array of final fit function points
-            chi2:   chisquared value of fit
-    """    
-
-read(filename)
-    """
-        Read yaml file and set properties
-        
-        filename:       name of file to write to 
-    """
-    
-write(filename,**notes)
-    """
-        Write to yaml file
-        
-        filename:       name of file to write to 
-        notes:          additional fields to write
-    """
-```
+| Function | Description |
+| --- | --- |
+| `draw(self, alpha=None, fig=None)` | Draw fit or range of fits |
+| `draw_fit(self, alpha, ax=None)` | Draw the fit and the data |
+| `draw_gcv(self, ax=None)` | Draw the Generalized Cross-Validation Parameter curve |
+| `draw_Lcurve(self,*args,**kwargs)` | Draw the L curve with fancy mouse hover and highlighting |
+| `draw_Scurve(self, threshold=-1, ax=None)` | Draw alpha vs gradient of logs |
+| `draw_logdist(self, alpha, ax=None)` | Draw the weights as a function of lamb, normalized for a log distribution of lambda |
+| `draw_weights(self, alpha, ax=None)` | Draw the weights as a function of lamb |
+| `fit(self, alpha, maxiter=None)` | Run the non-negative least squares algorithm for a single value of alpha (the regularization parameter) or an array of alphas |
+| `get_alpha(self)` | Return the set of alphas used |
+| `get_chi2(self, alpha=None)` | Calculate and return the chisquared for a particular value of alpha |
+| `get_rchi2(self, alpha=None)` | Calculate and return the reduced chisquared for a particular value of alpha |
+| `get_fit(self, alpha)` | Calculate and return the fit points for a particular value of alpha |
+| `get_gcv(self)` | Calculate the generalized cross-validation parameter |
+| `get_gcv_opt(self)` | Calculate alpha_opt based on the generalized cross-validation parameter (min gcv) |
+| `get_Lcurve(self)` | return (chi, norm of weight vector) |
+| `get_Lcurvature(self)` | find the curvature of the l curve |
+| `get_Lcurve_opt(self,mode='auto',threshold=7)` | Find alpha opt based on the L curve |
+| `get_Scurve(self)` | return ( alpha, rchi ) |
+| `get_Sgrad(self)` | Get the gradient of the log of the S curve |
+| `get_Scurve_opt(self,threshold=0.1)` | Get optimum value of alpha based on the S curve: when `d ln(chi) / d ln(alpha) > threshold` |
+| `get_weights(self, alpha)` | Calculate and return the distribution of weights for a particular value of alpha |
+| `read(self,filename)` | Read yaml file and set properties |
+| `write(self, filename, **notes)` | Write to yaml file |
 
 ### bILT.bILT
 
