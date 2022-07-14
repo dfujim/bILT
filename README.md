@@ -18,13 +18,15 @@ The `bILT` package provides two objects: [`ilt`](https://github.com/dfujim/bILT/
 Object constructor
 
 ```python
-ilt(x, y=None, yerr=None, fn=None)
+ilt(x, y=None, yerr=None, fn=None, lamb=None, nproc=1)
     """
         x:          array of time steps in data to fit
         y:          array of data points f(t) needing to fit
         yerr:       array of errors
-        fn:         function handle with signature f(x, w)
-
+        fn:         function handle with signature f(x,w)
+        lamb:       array of transformed values corresponding to the
+                    probabilities in the output (ex: np.logspace(-5,5,500))
+        nproc:      number of processors to use
         If x is a string, read input from filename
     """
 ```
@@ -53,59 +55,31 @@ z:          array of transformed values corresponding to the
 
 Object public functions
 
-```python
-draw(alpha_opt=None, fig=None)
-    """
-        Draw fit or range of fits.
-
-        alpha_opt:  if None draw:
-                        alpha v chi
-                        alpha v dchi/dalpha
-                        L-curve
-                    else draw:
-                        data & fit
-                        distribution
-        fig:    optional figure handle for redrawing when alpha_opt != None
-
-        returns: (p, fity, chi2)
-
-            p:      array of unnormalized weights
-            fity:   array of final fit function points
-            chi2:   chisquared value of fit
-    """
-
-fit(alpha, z, maxiter=None)
-    """
-        Run the non-negative least squares algorithm for a single value of
-        alpha (the regularization parameter) or an array of alphas
-
-        alpha:      Tikhonov regularization parameter (may be list or number)
-        z:          array of transformed values corresponding to the
-                    probabilities in the output (ex: np.logspace(-5, 5, 500))
-        maxiter:    max number of iterations in solver
-
-        returns: (p, fity, chi2)
-
-            p:      array of unnormalized weights
-            fity:   array of final fit function points
-            chi2:   chisquared value of fit
-    """    
-
-read(filename)
-    """
-        Read yaml file and set properties
-
-        filename:       name of file to write to
-    """
-
-write(filename, **notes)
-    """
-        Write to yaml file
-
-        filename:       name of file to write to
-        notes:          additional fields to write
-    """
-```
+| Function | Description |
+| --- | --- |
+| [`draw(self, alpha=None, fig=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L110) | Draw fit or range of fits |
+| [`draw_fit(self, alpha, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L178) | Draw the fit and the data |
+| [`draw_gcv(self, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L202) | Draw the Generalized Cross-Validation Parameter curve |
+| [`draw_Lcurve(self,*args,**kwargs)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L228) | Draw the L curve with fancy mouse hover and highlighting |
+| [`draw_Scurve(self, threshold=-1, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L280) | Draw alpha vs gradient of logs |
+| [`draw_logdist(self, alpha, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L306) | Draw the weights as a function of lamb, normalized for a log distribution of lambda |
+| [`draw_weights(self, alpha, ax=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L327) | Draw the weights as a function of lamb |
+| [`fit(self, alpha, maxiter=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L345) | Run the non-negative least squares algorithm for a single value of alpha (the regularization parameter) or an array of alphas |
+| [`get_alpha(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L404) | Return the set of alphas used |
+| [`get_chi2(self, alpha=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L407) | Calculate and return the chisquared for a particular value of alpha |
+| [`get_rchi2(self, alpha=None)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L428) | Calculate and return the reduced chisquared for a particular value of alpha |
+| [`get_fit(self, alpha)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L442) | Calculate and return the fit points for a particular value of alpha |
+| [`get_gcv(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L452) | Calculate the generalized cross-validation parameter |
+| [`get_gcv_opt(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L482) | Calculate alpha_opt based on the generalized cross-validation parameter (min gcv) |
+| [`get_Lcurve(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L494) | return (chi, norm of weight vector) |
+| [`get_Lcurvature(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L507) | find the curvature of the l curve |
+| [`get_Lcurve_opt(self,mode='auto',threshold=7)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L531) | Find alpha opt based on the L curve |
+| [`get_Scurve(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L565) | return ( alpha, rchi ) |
+| [`get_Sgrad(self)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L574) | Get the gradient of the log of the S curve |
+| [`get_Scurve_opt(self,threshold=0.1)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L591) | Get optimum value of alpha based on the S curve: when `d ln(chi) / d ln(alpha) > threshold` |
+| [`get_weights(self, alpha)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L601) | Calculate and return the distribution of weights for a particular value of alpha |
+| [`read(self,filename)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L614) | Read yaml file and set properties |
+| [`write(self, filename, **notes)`](https://github.com/dfujim/bILT/blob/dad3e1153fa5e20599526abb326b761811fed477/src/ilt.py#L637) | Write to yaml file |
 
 ### bILT.bILT
 
@@ -206,9 +180,10 @@ trans.draw(1)
 
 ```python
 from bILT import bILT
+import bdata as bd
 
 # setup
-trans = bILT(40214, 2009)
+trans = bILT(bd.bdata(40214, 2009))
 
 # select a range of alphas to test
 alpha = np.logspace(2, 8, 100)
