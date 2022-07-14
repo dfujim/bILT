@@ -396,7 +396,7 @@ class ilt(object):
         # save the results
         new_results = pd.Series(p, index=alpha,  name='p')
         new_results.index.name = 'alpha'
-        self.results = self.results.append(new_results)
+        self.results = pd.concat((self.results, new_results))
         
         # sort
         self.results.sort_index(inplace=True)

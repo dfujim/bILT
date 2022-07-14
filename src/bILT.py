@@ -24,13 +24,15 @@ class bILT(ilt):
         p_lognorm:  normalized p, accounting for logarithmic bin spacing of T1
         n:          number of T1 values in array within 0.01*tau and 100*tau
         T1:         user-specified T1 array
-        
+        bdat:       bdata object corresponding to base data file
+        year:       year of run
+        run:        run number
     """
     
-    def __init__(self, run, year=-1, rebin=1, probe='Li8', T1=1000, nproc=1):
+    def __init__(self, bdat, rebin=1, probe='Li8', T1=1000, nproc=1):
         """
-            run:        run number
-            year:       year 
+            bdat:       bdata (or bmerged) object corresponding to run to analyze
+                        OR YAML settings filename to read
             rebin:      rebinning in asymmetry calculation
             probe:      probe lifetime to use in exp calculation
             T1:         if int: number of T1 values in array within 0.01*tau and
@@ -41,16 +43,16 @@ class bILT(ilt):
             if run is a filename, read from that file
         """
         
-        if type(run) is str:
-            self.read(run)
-        else:
+        if type(bdat) is str:
+            self.read(bdat)
+        elif type(bdat) is bd.bdata:
         
             # save inputs
-            self.run = run
-            self.year = year
+            self.run = bdat.run
+            self.year = bdat.year
             self.rebin = rebin
             self.probe = probe
-            self.results = pd.Series()
+            self.results = pd.Series(dtype=np.float64)
             self.nproc = nproc
             
             # set weights
@@ -67,13 +69,16 @@ class bILT(ilt):
                 self.lamb = np.logspace(log10_T1_min, log10_T1_max, T1, base=10.0)
             
             # setup communal with read
-            self._setup()
+            self._setup(bdat)
             
-    def _setup(self):
+    def _setup(self, bdat):
+        """
+            Input: bdata object
+        """
         
         # get data
-        dat = bd.bdata(self.run, self.year)
-        self.x,self.y,self.yerr = dat.asym('c', rebin=self.rebin)
+        self.bdat = bdat
+        self.x,self.y,self.yerr = bdat.asym('c', rebin=self.rebin)
         
         # remove zero error values
         idx = self.yerr != 0
@@ -82,7 +87,7 @@ class bILT(ilt):
         self.yerr = self.yerr[idx]
         
         # get function 
-        f = pulsed_exp(lifetime=bd.life[self.probe], pulse_len=dat.get_pulse_s())
+        f = pulsed_exp(lifetime=bd.life[self.probe], pulse_len=self.bdat.pulse_s)
         self.fn = lambda x,w: f(x,w,1) 
                 
         # build error matrix
@@ -103,14 +108,34 @@ class bILT(ilt):
             file_contents = yaml.safe_load(fid.read())
             
         # set results
-        results = pd.Series(file_contents['p'],index=file_contents['alpha'],
-                                 name='p')    
+        results = pd.Series(file_contents['p'], 
+                            index=file_contents['alpha'],
+                            name='p',
+                            dtype=np.float64)    
         results.index.name = 'alpha'
         del file_contents['p']
         del file_contents['alpha']
     
         self.__dict__ = {**file_contents,'results':results}
-        self._setup()
+        
+        # read file(s)
+        if self.year > 4000:
+            
+            self.year = str(self.year)
+            self.run = str(self.run)
+            
+            # split year and runs
+            years = [int(self.year[i:i+4]) for i in range(0, len(self.year), 4)]
+            runs = [int(self.runs[i:i+5]) for i in range(0, len(self.runs), 5)]
+            
+            # get data
+            bdat = bd.bmerged([bd.bdata(r, y) for r, y in zip(runs, years)])
+            
+        else:
+            bdat = bd.bdata(self.run, self.year)
+        
+        # set up
+        self._setup(bdat)
             
         # make arrays
         self.lamb = np.array(self.lamb)
@@ -127,10 +152,10 @@ class bILT(ilt):
         """
         
         # read attributes
-        dat = bd.bdata(self.run, self.year)
         output = {key:self.__dict__[key] for key in ('run','year','rebin',
-                                                     'maxiter','lamb','probe')}
-        output = {'title':dat.title, **output, **notes}
+                                                     'maxiter','lamb','probe') 
+                                         if key in self.__dict__.keys()}
+        output = {'title':self.bdat.title, **output, **notes}
         
         # make numpy arrays lists
         output['p'] = self.results.apply(np.ndarray.tolist).tolist()
