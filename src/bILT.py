@@ -45,7 +45,7 @@ class bILT(ilt):
         
         if type(bdat) is str:
             self.read(bdat)
-        elif type(bdat) is bd.bdata:
+        elif type(bdat) is bd.bdata or bd.bmerged:
         
             # save inputs
             self.run = bdat.run
